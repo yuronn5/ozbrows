@@ -44,8 +44,15 @@ function clampEnd(min: number) {
 }
 function genSlots(step = SLOT_MINUTES) {
   const out: string[] = [];
-  for (let h = WORK_START; h < WORK_END; h++)
-    for (let m = 0; m < 60; m += step) out.push(toTime(h, m));
+  const latestStart = WORK_END * 60 - SERVICE_DURATION; // останній час, з якого ще влазимо
+  for (let h = WORK_START; h < WORK_END; h++) {
+    for (let m = 0; m < 60; m += step) {
+      const min = h * 60 + m;
+      if (min <= latestStart) {
+        out.push(toTime(h, m));
+      }
+    }
+  }
   return out;
 }
 function rangeTimes(
