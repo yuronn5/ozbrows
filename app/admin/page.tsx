@@ -44,39 +44,66 @@ export default function AdminPage() {
     );
   }, [rows, q]);
 
-  async function api<T>(path: string, params?: Record<string,string>, method: 'GET' | 'POST' = 'GET', body?: unknown): Promise<T> {
-    if (!adminKey) throw new Error('No admin PIN');
-    const headers: Record<string,string> = { 'Content-Type': 'application/json', 'X-Admin-Key': adminKey };
-    let url = `${API_BASE}${path}`;
-    if (method === 'GET' && params && Object.keys(params).length) {
-      const u = new URL(url, location.origin);
-      Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v));
-      u.searchParams.set('_', String(Date.now())); // cache-bust
-      url = u.toString();
-    }
-    const res = await fetch(url, { method, headers, body: body ? JSON.stringify(body) : null, cache: 'no-store' });
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error((json as { error?: string })?.error || 'API error');
-    return json as T;
+  async function ensureAdminKey(): Promise<string> {
+  // читаємо з state/session
+  let key = typeof window !== 'undefined' ? sessionStorage.getItem('ADMIN_KEY') || '' : '';
+  if (!key) {
+    // просимо у користувача
+    const pin = typeof window !== 'undefined' ? prompt('Enter admin PIN') || '' : '';
+    if (!pin) throw new Error('Canceled'); // користувач передумав
+    key = pin;
+    sessionStorage.setItem('ADMIN_KEY', key);
+  }
+  return key;
+}
+
+  async function api<T>(
+  path: string,
+  params?: Record<string, string>,
+  method: 'GET' | 'POST' = 'GET',
+  body?: unknown
+): Promise<T> {
+  const key = await ensureAdminKey(); // <- гарантуємо наявність PIN тут
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'X-Admin-Key': key,
+  };
+
+  let url = `${API_BASE}${path}`;
+  if (method === 'GET' && params && Object.keys(params).length) {
+    const u = new URL(url, location.origin);
+    Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v));
+    u.searchParams.set('_', String(Date.now())); // cache-bust
+    url = u.toString();
   }
 
+  const res = await fetch(url, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : null,
+    cache: 'no-store',
+  });
+
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error((json as { error?: string }).error || 'API error');
+  return json as T;
+}
+
   async function load() {
-    try {
-      if (!adminKey) {
-        const pin = prompt('Enter admin PIN') || '';
-        if (!pin) return;
-        setAdminKey(pin);
-      }
-      setLoading(true);
-      const data = await api<{ rows: Row[] }>('/admin-list', { start: from, end: to }, 'GET');
-      setRows((data.rows || []).slice().sort((a,b)=> a.date.localeCompare(b.date) || a.time.localeCompare(b.time)));
-    } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : 'Failed to load');
+  try {
+    setLoading(true);
+    const data = await api<{ rows: Row[] }>('/admin-list', { start: from, end: to }, 'GET');
+    setRows((data.rows || []).sort((a,b)=> a.date.localeCompare(b.date) || a.time.localeCompare(b.time)));
+  } catch (e) {
+    if ((e as Error).message !== 'Canceled') {
+      alert((e as Error).message || 'Failed to load');
       console.error(e);
-    } finally {
-      setLoading(false);
     }
+  } finally {
+    setLoading(false);
   }
+}
 
   async function cancel(date: string, time: string) {
     if (!confirm(`Cancel booking on ${date} at ${time}? This will free the time slot.`)) return;
