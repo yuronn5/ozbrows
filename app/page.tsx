@@ -1,4 +1,3 @@
-// app/page.tsx
 'use client';
 import { useEffect } from 'react';
 import Link from "next/link";
@@ -56,22 +55,22 @@ export default function Page() {
   return (
     <>
       {/* NAV */}
-      <nav className="nav" aria-label="Основна навігація">
+      <nav className="nav" aria-label="Main navigation">
         <div className="container nav-inner">
-          <a className="brand" href="#home" aria-label="До початку">
+          <a className="brand" href="#home" aria-label="Back to top">
             <span className="badge" aria-hidden="true">OZ</span>
             <span>OzBrows</span>
           </a>
           <div className="menu" role="menu">
-            <a href="#services">Послуги</a>
-            <a href="#pricing">Ціни</a>
-            <a href="#gallery">Галерея</a>
-            <a href="#reviews">Відгуки</a>
+            <a href="#services">Services</a>
+            <a href="#pricing">Pricing</a>
+            <a href="#gallery">Gallery</a>
+            <a href="#reviews">Testimonials</a>
             <a href="#faq">FAQ</a>
-            <a href="#contact">Контакти</a>
-            <Link href="/booking">Бронювання</Link>
+            <a href="#contact">Contacts</a>
+            <Link href="/booking">Booking</Link>
           </div>
-          <a className="btn" href="#" data-book-url="https://calendly.com/your-link">Записатися</a>
+          <a className="btn" href="#" data-book-url="https://calendly.com/your-link">Book Now</a>
         </div>
       </nav>
 
@@ -86,7 +85,7 @@ export default function Page() {
               </span>
             </div>
             <h1 className="display">
-              Підкреслимо вашу природну красу{' '}
+              Highlight your natural beauty{' '}
               <span
                 style={{
                   background: 'linear-gradient(90deg, var(--brand), var(--brand-2))',
@@ -95,25 +94,25 @@ export default function Page() {
                   color: 'transparent',
                 }}
               >
-                ідеальними бровами
+                with perfect brows
               </span>
             </h1>
             <p className="hero-lead">
-              Професійна корекція, ламінування та фарбування брів. Прецизійна форма, стійкий результат і делікатний догляд.
+              Professional shaping, lamination, and tinting. Precise form, long-lasting results, and gentle care.
             </p>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' as const }}>
-              <a className="btn" href="#" data-book-url="https://calendly.com/your-link">Записатися</a>
-              <a className="btn-ghost" href="#gallery">Дивитися роботи</a>
+              <a className="btn" href="#" data-book-url="https://calendly.com/your-link">Book Now</a>
+              <a className="btn-ghost" href="#gallery">View Works</a>
             </div>
             <div className="stats">
-              <div className="stat"><div className="val">1.2k+</div><div className="lbl">щасливих клієнтів</div></div>
-              <div className="stat"><div className="val">4.9★</div><div className="lbl">середній рейтинг</div></div>
-              <div className="stat"><div className="val">7+ років</div><div className="lbl">досвіду</div></div>
+              <div className="stat"><div className="val">1.2k+</div><div className="lbl">happy clients</div></div>
+              <div className="stat"><div className="val">4.9★</div><div className="lbl">average rating</div></div>
+              <div className="stat"><div className="val">7+ years</div><div className="lbl">experience</div></div>
             </div>
           </div>
           <div className="col">
             <figure className="hero-img">
-              <img src="/hero.jpg" alt="Ніжний портрет клієнтки з ідеально сформованими бровами" />
+              <img src="/hero.jpg" alt="Gentle portrait of a client with perfectly shaped brows" />
             </figure>
           </div>
         </div>
@@ -125,17 +124,17 @@ export default function Page() {
           <article className="card reveal" style={{ padding: 20 }}>
             <div className="icon" aria-hidden="true">🍃</div>
             <h3>Brow Shaping</h3>
-            <p>Індивідуальна форма з урахуванням пропорцій вашого обличчя, симетрія та легкий природний вигляд.</p>
+            <p>Custom shape that matches your face proportions, symmetry, and a soft natural look.</p>
           </article>
           <article className="card reveal" style={{ padding: 20 }}>
             <div className="icon" aria-hidden="true">💧</div>
             <h3>Brow Tinting</h3>
-            <p>Підібраний відтінок, що підкреслює густоту та робить погляд виразнішим на 3–4 тижні.</p>
+            <p>Selected shade to enhance density and add expressiveness for 3–4 weeks.</p>
           </article>
           <article className="card reveal" style={{ padding: 20 }}>
             <div className="icon" aria-hidden="true">🌿</div>
             <h3>Brow Lamination</h3>
-            <p>Стійке укладання волосків, дзеркальний блиск і акуратна форма без гелю до 6 тижнів.</p>
+            <p>Long-lasting styling, glossy shine, and neat shape without gel for up to 6 weeks.</p>
           </article>
         </div>
       </section>
@@ -152,8 +151,8 @@ export default function Page() {
           <div id="gallery" className="card reveal" style={{ padding: 22 }}>
             <h2>Gallery</h2>
             <div className="gallery">
-              <img src="/brow-1.jpg" alt="Фото брів — вигляд до та після, крупний план" />
-              <img src="/brow-2.jpg" alt="Фото брів — доглянуті брови після процедури" />
+              <img src="/brow-1.jpg" alt="Before and after brows — close-up view" />
+              <img src="/brow-2.jpg" alt="Well-groomed brows after the procedure" />
             </div>
           </div>
         </div>
@@ -164,14 +163,14 @@ export default function Page() {
         <div className="grid-2">
           <div id="reviews" className="card reveal stack" style={{ padding: 22 }}>
             <h2>Testimonials</h2>
-            <div className="quote"><p>«Форма і колір — ідеальні. Дуже дбайливе ставлення, результат тримається довго!»</p><div className="name">— Марія К.</div></div>
-            <div className="quote"><p>«Ламінування змінило мої ранки — укладка не потрібна. Рекомендую OzBrows!»</p><div className="name">— Олена В.</div></div>
+            <div className="quote"><p>“Perfect shape and color. Very attentive approach, the result lasts long!”</p><div className="name">— Maria K.</div></div>
+            <div className="quote"><p>“Lamination changed my mornings — no styling needed. Highly recommend OzBrows!”</p><div className="name">— Olena V.</div></div>
           </div>
           <div id="faq" className="card reveal stack" style={{ padding: 22 }}>
             <h2>FAQ</h2>
-            <div className="faq-item"><button className="faq-q" aria-expanded="false">Що таке ламінування брів?<span>▾</span></button><div className="faq-a">Це безпечний склад...</div></div>
-            <div className="faq-item"><button className="faq-q" aria-expanded="false">Скільки тримається фарбування?<span>▾</span></button><div className="faq-a">Зазвичай 3–4 тижні...</div></div>
-            <div className="faq-item"><button className="faq-q" aria-expanded="false">Як часто робити корекцію?<span>▾</span></button><div className="faq-a">Раз на 3–5 тижнів...</div></div>
+            <div className="faq-item"><button className="faq-q" aria-expanded="false">What is brow lamination?<span>▾</span></button><div className="faq-a">A safe formula that fixes hairs in the desired direction, adds shine and neat look for up to 6 weeks.</div></div>
+            <div className="faq-item"><button className="faq-q" aria-expanded="false">How long does tinting last?<span>▾</span></button><div className="faq-a">Usually 3–4 weeks, depending on skin type and home care.</div></div>
+            <div className="faq-item"><button className="faq-q" aria-expanded="false">How often should I do shaping?<span>▾</span></button><div className="faq-a">Every 3–5 weeks to maintain clear form and neat look.</div></div>
           </div>
         </div>
       </section>
@@ -181,15 +180,15 @@ export default function Page() {
         <div className="glass" style={{ padding: 24 }}>
           <div className="grid-2">
             <div className="stack">
-              <h2>Контакти</h2>
-              <div className="foot-card"><strong>Адреса</strong><br /><span>вул. Прикладна, 12, Київ</span></div>
-              <div className="foot-card"><strong>Телефон</strong><br /><a href="tel:+380000000000">+380 00 000 00 00</a></div>
+              <h2>Contacts</h2>
+              <div className="foot-card"><strong>Address</strong><br /><span>12 Example St, Kyiv</span></div>
+              <div className="foot-card"><strong>Phone</strong><br /><a href="tel:+380000000000">+380 00 000 00 00</a></div>
               <div className="foot-card"><strong>Instagram</strong><br /><a href="https://instagram.com/ozbrows" target="_blank" rel="noopener">instagram.com/ozbrows</a></div>
             </div>
             <div className="stack">
-              <h2>Запис онлайн</h2>
-              <p>Виберіть зручний час — підтвердження прийде у Direct або SMS.</p>
-              <a className="btn" href="#" data-book-url="https://calendly.com/your-link">Відкрити форму запису</a>
+              <h2>Online Booking</h2>
+              <p>Select a convenient time — confirmation will be sent via Direct or SMS.</p>
+              <a className="btn" href="#" data-book-url="https://calendly.com/your-link">Open Booking Form</a>
             </div>
           </div>
         </div>
@@ -198,7 +197,7 @@ export default function Page() {
       <footer className="container" role="contentinfo">
         <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <span>© <span id="y" /> OzBrows</span>
-          <a href="#home" className="btn-ghost" aria-label="До початку сторінки">⬆ Повернутись нагору</a>
+          <a href="#home" className="btn-ghost" aria-label="Back to top">⬆ Back to top</a>
         </div>
       </footer>
     </>

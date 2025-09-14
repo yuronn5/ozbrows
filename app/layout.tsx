@@ -3,9 +3,9 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'OzBrows — Brow Artist',
+  title: "OzBrows — Brow Artist",
   description:
-    'OzBrows — професійна корекція, ламінування та фарбування брів. Ідеальна форма з першого дотику.',
+    "OzBrows — professional brow shaping, lamination, and tinting. Perfect brows from the very first touch.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
