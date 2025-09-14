@@ -2,6 +2,7 @@
 import { useEffect } from 'react';
 import Link from "next/link";
 import Nav from './components/Nav';
+import Gallery from './components/Gallery';
 
 export default function Page() {
   useEffect(() => {
@@ -23,14 +24,50 @@ export default function Page() {
     });
 
     // FAQ accordion
-    document.querySelectorAll<HTMLButtonElement>('.faq-item .faq-q').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const item = btn.closest('.faq-item');
-        if (!item) return;
-        const open = item.classList.toggle('open');
-        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    // FAQ accordion (з плавною анімацією)
+document.querySelectorAll<HTMLButtonElement>('.faq-item .faq-q').forEach((btn) => {
+  const item = btn.closest('.faq-item');
+  const panel = item?.querySelector<HTMLElement>('.faq-a');
+  if (!item || !panel) return;
+
+  // Початковий стан
+  panel.style.maxHeight = '0px';
+  btn.setAttribute('aria-expanded', 'false');
+
+  btn.addEventListener('click', () => {
+    const isOpen = item.classList.toggle('open');
+    btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+
+    if (isOpen) {
+      // спочатку скидка, щоб браузер переміряв висоту
+      panel.style.maxHeight = '0px';
+      // на наступний кадр ставимо реальну висоту
+      requestAnimationFrame(() => {
+        panel.style.maxHeight = panel.scrollHeight + 'px';
       });
-    });
+    } else {
+      // захлопуємо
+      panel.style.maxHeight = panel.scrollHeight + 'px';
+      // і одразу анімуємо до 0 (трюк для плавності)
+      requestAnimationFrame(() => {
+        panel.style.maxHeight = '0px';
+      });
+    }
+  });
+});
+
+// Якщо контент FAQ може змінюватися динамічно, оновлюй max-height при ресайзі:
+const ro = new ResizeObserver((entries) => {
+  for (const entry of entries) {
+    const panel = entry.target as HTMLElement;
+    const item = panel.closest('.faq-item');
+    if (item?.classList.contains('open')) {
+      panel.style.maxHeight = panel.scrollHeight + 'px';
+    }
+  }
+});
+document.querySelectorAll<HTMLElement>('.faq-item .faq-a').forEach((p) => ro.observe(p));
+
 
     // Reveal on scroll
     const io = new IntersectionObserver(
@@ -89,13 +126,13 @@ export default function Page() {
             </div>
             <div className="stats">
               <div className="stat"><div className="val">1.2k+</div><div className="lbl">happy clients</div></div>
-              <div className="stat"><div className="val">4.9★</div><div className="lbl">average rating</div></div>
+              <div className="stat"><div className="val">5★</div><div className="lbl">average rating</div></div>
               <div className="stat"><div className="val">7+ years</div><div className="lbl">experience</div></div>
             </div>
           </div>
           <div className="col">
             <figure className="hero-img">
-              <img src="/hero.jpg" alt="Gentle portrait of a client with perfectly shaped brows" />
+              <img src="/images/main-artist.png" alt="Gentle portrait of a client with perfectly shaped brows" />
             </figure>
           </div>
         </div>
@@ -124,18 +161,21 @@ export default function Page() {
 
       {/* PRICING + GALLERY */}
       <section className="container pricing">
-        <div className="grid-2">
-          <div id="pricing" className="card reveal" style={{ padding: 22 }}>
+        <div className="grid-1">
+          {/* <div id="pricing" className="card reveal" style={{ padding: 22 }}>
             <h2>Pricing</h2>
             <div className="price-row"><span>Brow Shaping</span><span className="price">$30</span></div>
             <div className="price-row"><span>Brow Tinting</span><span className="price">$40</span></div>
             <div className="price-row"><span>Brow Lamination</span><span className="price">$50</span></div>
-          </div>
+          </div> */}
           <div id="gallery" className="card reveal" style={{ padding: 22 }}>
-            <h2>Gallery</h2>
+            <h2 style={{ textAlign: 'center' }}>Gallery</h2>
             <div className="gallery">
-              <img src="/brow-1.jpg" alt="Before and after brows — close-up view" />
-              <img src="/brow-2.jpg" alt="Well-groomed brows after the procedure" />
+              {/* <img src="/images/IMG_4587.jpg" alt="Before and after brows — close-up view" />
+              <img src="/images/IMG_4320.jpg" alt="Well-groomed brows after the procedure" />
+              <img src="/images/IMG_5383.jpg" alt="Well-groomed brows after the procedure" />
+              <img src="/images/IMG_5617.jpg" alt="Well-groomed brows after the procedure" /> */}
+               <Gallery />
             </div>
           </div>
         </div>
@@ -149,30 +189,56 @@ export default function Page() {
             <div className="quote"><p>“Perfect shape and color. Very attentive approach, the result lasts long!”</p><div className="name">— Maria K.</div></div>
             <div className="quote"><p>“Lamination changed my mornings — no styling needed. Highly recommend OzBrows!”</p><div className="name">— Olena V.</div></div>
           </div>
-          <div id="faq" className="card reveal stack" style={{ padding: 22 }}>
+          {/* <div id="faq" className="card reveal stack" style={{ padding: 22 }}>
+            <h2>FAQ</h2>
+            <div className="faq-item"><button className="faq-q" aria-expanded="false">What is brow lamination?<span>▾</span></button><div className="faq-a">A safe formula that fixes hairs in the desired direction, adds shine and neat look for up to 6 weeks.</div></div>
+            <div className="faq-item"><button className="faq-q" aria-expanded="false">How long does tinting last?<span>▾</span></button><div className="faq-a">Usually 3–4 weeks, depending on skin type and home care.</div></div>
+            <div className="faq-item"><button className="faq-q" aria-expanded="false">How often should I do shaping?<span>▾</span></button><div className="faq-a">Every 3–5 weeks to maintain clear form and neat look.</div></div>
+          </div> */}
+          <div id="pricing" className="card reveal" style={{ padding: 22 }}>
+            <h2>Pricing</h2>
+            <div className="price-row"><span>Brow Shaping</span><span className="price">$30</span></div>
+            <div className="price-row"><span>Brow Tinting</span><span className="price">$40</span></div>
+            <div className="price-row"><span>Brow Lamination</span><span className="price">$50</span></div>
+          </div>
+        </div>
+      </section>
+
+      {/* CONTACT and faq */}
+      <section id="contact" className="container contact">
+        
+        <div className="glass" style={{ padding: 24 }}>
+          
+          <div className="grid-2">
+            <div id="faq" className="card reveal stack" style={{ padding: 22 }}>
             <h2>FAQ</h2>
             <div className="faq-item"><button className="faq-q" aria-expanded="false">What is brow lamination?<span>▾</span></button><div className="faq-a">A safe formula that fixes hairs in the desired direction, adds shine and neat look for up to 6 weeks.</div></div>
             <div className="faq-item"><button className="faq-q" aria-expanded="false">How long does tinting last?<span>▾</span></button><div className="faq-a">Usually 3–4 weeks, depending on skin type and home care.</div></div>
             <div className="faq-item"><button className="faq-q" aria-expanded="false">How often should I do shaping?<span>▾</span></button><div className="faq-a">Every 3–5 weeks to maintain clear form and neat look.</div></div>
           </div>
-        </div>
-      </section>
 
-      {/* CONTACT */}
-      <section id="contact" className="container contact">
-        <div className="glass" style={{ padding: 24 }}>
-          <div className="grid-2">
-            <div className="stack">
+          <div id="contact" className="card reveal" style={{ padding: 22 }}>
+            <h2>Contacts</h2>
+            <div className="foot-card"><strong>Address</strong><br /><span>12 Example St, Kyiv</span></div>
+              <div className="foot-card"><strong>Phone</strong><br /><a href="tel:+380000000000">+380 00 000 00 00</a></div>
+              <div className="foot-card"><strong>Instagram</strong><br /><a href="https://instagram.com/ozbrows" target="_blank" rel="noopener">instagram.com/ozbrows</a></div>
+              <a className="btn" href="#" data-book-url="https://calendly.com/your-link">Open Booking Form</a>
+          </div>
+          
+            {/* <div className="stack">
               <h2>Contacts</h2>
               <div className="foot-card"><strong>Address</strong><br /><span>12 Example St, Kyiv</span></div>
               <div className="foot-card"><strong>Phone</strong><br /><a href="tel:+380000000000">+380 00 000 00 00</a></div>
               <div className="foot-card"><strong>Instagram</strong><br /><a href="https://instagram.com/ozbrows" target="_blank" rel="noopener">instagram.com/ozbrows</a></div>
-            </div>
-            <div className="stack">
+              <a className="btn" href="#" data-book-url="https://calendly.com/your-link">Open Booking Form</a>
+            </div> */}
+
+
+            {/* <div className="stack">
               <h2>Online Booking</h2>
               <p>Select a convenient time — confirmation will be sent via Direct or SMS.</p>
               <a className="btn" href="#" data-book-url="https://calendly.com/your-link">Open Booking Form</a>
-            </div>
+            </div> */}
           </div>
         </div>
       </section>
