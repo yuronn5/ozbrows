@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useState, MouseEvent } from 'react';
+import { MouseEvent, useEffect, useRef, useState } from 'react';
 import { Calendar } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin, { DateClickArg } from '@fullcalendar/interaction';
+import './booking.css';
 
 const API_BASE = '/api';
 
@@ -13,7 +14,7 @@ type DayData = { blocked: string[]; bookings: Booking[] };
 const WORK_START = 8, WORK_END = 20;
 const SLOT_MINUTES = 15, SERVICE_DURATION = 45;
 
-/** HTTP error with status (щоб не кастити до any) */
+/** HttpError з кодом статусу — щоб не використовувати any */
 class HttpError extends Error {
   status: number;
   constructor(message: string, status: number) {
@@ -22,7 +23,7 @@ class HttpError extends Error {
   }
 }
 
-// ---- time utils ----
+/* ---------- time utils ---------- */
 function toTime(h: number, m: number) { return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`; }
 function parseTime(t: string) { const [hh,mm] = t.split(':').map(Number); return hh*60+mm; }
 function minutesToTime(min: number) { return toTime(Math.floor(min/60), min%60); }
@@ -38,7 +39,7 @@ function rangeTimes(startTimeStr: string, dur = SERVICE_DURATION, step = SLOT_MI
   return out;
 }
 
-// ---- data helpers (typed) ----
+/* ---------- data helpers ---------- */
 async function loadDay(dateStr: string): Promise<DayData> {
   const url = new URL(`${API_BASE}/availability`, location.origin);
   url.searchParams.set('date', dateStr);
@@ -64,6 +65,8 @@ async function apiBook(payload: BookPayload): Promise<ApiOk> {
   return json as ApiOk;
 }
 
+/* ===================================================== */
+
 export default function BookingPage() {
   const calRef = useRef<HTMLDivElement>(null);
   const calendarInst = useRef<Calendar | null>(null);
@@ -77,6 +80,7 @@ export default function BookingPage() {
   const [phone, setPhone] = useState('');
   const [busy, setBusy] = useState(false);
 
+  /* відкриття “модалки” для дати */
   const openForDate = async (d: string) => {
     setSelected(null); setName(''); setPhone(''); setDateStr(d);
     try {
@@ -90,22 +94,61 @@ export default function BookingPage() {
       setSlots(genSlots());
     } catch {
       setBlocked([]); setBookings([]); setSlots(genSlots());
+      // eslint-disable-next-line no-alert
       alert('Не вдалося завантажити зайнятість дня');
     }
   };
 
+  /* ініціалізація календаря */
   useEffect(() => {
     if (!calRef.current) return;
+
+    const isMobile = () => window.innerWidth < 640;
+
     const cal = new Calendar(calRef.current, {
       plugins: [dayGridPlugin, interactionPlugin],
       initialView: 'dayGridMonth',
+      firstDay: 1,
       height: 'auto',
-      selectable: true,
+      expandRows: true,
+      fixedWeekCount: false,
+      showNonCurrentDates: false,
+      handleWindowResize: true,
+      longPressDelay: 0,
+      selectLongPressDelay: 0,
+      dayMaxEventRows: true,
+      validRange: { start: new Date().toISOString().slice(0,10) }, // без минулих дат
+      headerToolbar: isMobile()
+        ? { left: 'prev,next today', center: 'title', right: '' }
+        : { left: 'prev,next today', center: 'title', right: '' },
+      buttonText: { today: 'today', month: 'month', prev: '‹', next: '›' },
+
       dateClick: (info: DateClickArg) => openForDate(info.dateStr),
+      dayCellDidMount(arg) {
+        const cell = arg.el as HTMLElement;
+        cell.style.cursor = 'pointer';
+        if (!cell.getAttribute('title')) cell.setAttribute('title', 'Click to choose a time');
+      },
     });
+
+    const onResize = () => {
+      cal.setOption(
+        'headerToolbar',
+        isMobile()
+          ? { left: 'prev,next today', center: 'title', right: '' }
+          : { left: 'prev,next today', center: 'title', right: '' }
+      );
+    };
+
     cal.render();
+    window.addEventListener('resize', onResize);
     calendarInst.current = cal;
-    return () => { cal.destroy(); calendarInst.current = null; };
+
+    return () => {
+      window.removeEventListener('resize', onResize);
+      cal.destroy();
+      calendarInst.current = null;
+    };
   }, []);
 
   const isBlocked = (t: string) => blocked.includes(t);
@@ -144,26 +187,45 @@ export default function BookingPage() {
     if (e.target === e.currentTarget) setDateStr(null);
   }
 
+  /* Esc to close modal */
+  useEffect(() => {
+    const onKey = (ev: KeyboardEvent) => { if (ev.key === 'Escape') setDateStr(null); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  const prettyDate =
+    dateStr &&
+    new Date(`${dateStr}T12:00:00`).toLocaleDateString('uk-UA', { day: '2-digit', month: 'long', year: 'numeric' });
+
   return (
-    <main className="container" style={{ padding: '40px 0' }}>
-      <h1 className="display">Online Booking</h1>
-      <p className="hero-lead">Click a date to choose a time and book your appointment.</p>
+    <main className="container" style={{ padding: '28px 0 40px' }}>
+      <h1 className="display" style={{ marginBottom: 6 }}>Online Booking</h1>
+      <p className="hero-lead booking__intro">Click a date to choose a time and book your appointment.</p>
 
-      <div
-        ref={calRef}
-        style={{ background: '#fff', borderRadius: '14px', padding: '10px', boxShadow: '0 8px 30px rgba(0,0,0,.08)' }}
-      />
+      <div className="booking__wrap">
+        <div className="booking__card" aria-label="Calendar for choosing a date">
+          <div ref={calRef} />
+        </div>
+      </div>
 
+      {/* Modal */}
       {dateStr && (
-        <div className="modal open" onClick={onModalBgClick}>
+        <div className="modal open" onClick={onModalBgClick} role="dialog" aria-modal="true" aria-labelledby="title">
           <div className="sheet">
-            <h3 style={{ margin: 0 }}>Вибір часу</h3>
-            <div className="sub">
-              {new Date(`${dateStr}T12:00:00`).toLocaleDateString('uk-UA', { day: '2-digit', month: 'long', year: 'numeric' })}
-              {' • '}Робочі години: <b>08:00–20:00</b> • Тривалість: <b>45 хв</b>
+            <div className="sheet__head">
+              <div className="icon-badge" aria-hidden="true">🗓</div>
+              <div>
+                <h3 id="title" className="sheet__title">Choose a time</h3>
+                <div className="sheet__sub">
+                  {prettyDate} • Working hours: <b>08:00–20:00</b> • Duration: <b>45m</b>
+                </div>
+              </div>
+              <div className="sheet__spacer" />
+              <button className="btn" onClick={() => setDateStr(null)} aria-label="Close">Close</button>
             </div>
 
-            <div className="slots">
+            <div className="slots" aria-label="Available start times">
               {slots.map((t) => {
                 const blockedSlot = isBlocked(t);
                 const fits = fitsFrom(t);
@@ -174,6 +236,7 @@ export default function BookingPage() {
                     className={`slot${blockedSlot ? ' blocked' : ''}${!fits ? ' notfit' : ''}${selected === t ? ' selected' : ''}`}
                     onClick={() => !disabled && setSelected(t)}
                     disabled={disabled}
+                    aria-pressed={selected === t}
                   >
                     {t}
                   </button>
@@ -181,7 +244,7 @@ export default function BookingPage() {
               })}
             </div>
 
-            <div className="form" style={{ marginTop: 10 }}>
+            <div className="form" style={{ marginTop: 12 }}>
               <div>
                 <label>Ім’я
                   <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ім’я" />
@@ -195,8 +258,8 @@ export default function BookingPage() {
             </div>
 
             {bookings?.length > 0 && (
-              <div className="admin-list">
-                <h4>Бронювання на день</h4>
+              <div className="admin-list" aria-live="polite">
+                <h4>Bookings for this day</h4>
                 <div>
                   {bookings
                     .slice()
@@ -212,11 +275,15 @@ export default function BookingPage() {
             )}
 
             <div className="bar">
-              <div className="left" />
+              <div />
               <div className="right">
-                <button className="btn" onClick={() => setDateStr(null)}>Закрити</button>
-                <button className="btn primary" onClick={handleConfirm} disabled={busy || !selected || !name || !phone}>
-                  {busy ? 'Зберігаю…' : 'Підтвердити'}
+                <button className="btn" onClick={() => setDateStr(null)}>Cancel</button>
+                <button
+                  className="btn primary"
+                  onClick={handleConfirm}
+                  disabled={busy || !selected || !name.trim() || !phone.trim()}
+                >
+                  {busy ? 'Saving…' : 'Confirm booking'}
                 </button>
               </div>
             </div>
