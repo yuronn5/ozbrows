@@ -1,6 +1,7 @@
 'use client';
 import { useEffect } from 'react';
 import Link from "next/link";
+import Nav from './components/Nav';
 
 export default function Page() {
   useEffect(() => {
@@ -54,25 +55,7 @@ export default function Page() {
 
   return (
     <>
-      {/* NAV */}
-      <nav className="nav" aria-label="Main navigation">
-        <div className="container nav-inner">
-          <a className="brand" href="#home" aria-label="Back to top">
-            <span className="badge" aria-hidden="true">OZ</span>
-            <span>OzBrows</span>
-          </a>
-          <div className="menu" role="menu">
-            <a href="#services">Services</a>
-            <a href="#pricing">Pricing</a>
-            <a href="#gallery">Gallery</a>
-            <a href="#reviews">Testimonials</a>
-            <a href="#faq">FAQ</a>
-            <a href="#contact">Contacts</a>
-            <Link href="/booking">Booking</Link>
-          </div>
-          <a className="btn" href="#" data-book-url="https://calendly.com/your-link">Book Now</a>
-        </div>
-      </nav>
+      <Nav />
 
       {/* HERO */}
       <header id="home" className="hero container">
