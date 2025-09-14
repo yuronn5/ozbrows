@@ -102,7 +102,7 @@ export default function Page() {
       </header>
 
       {/* SERVICES */}
-      <section id="services" className="container" style={{ padding: '26px 0' }}>
+      <section id="services" className="container services">
         <div className="grid-3">
           <article className="card reveal" style={{ padding: 20 }}>
             <div className="icon" aria-hidden="true">🍃</div>
@@ -123,7 +123,7 @@ export default function Page() {
       </section>
 
       {/* PRICING + GALLERY */}
-      <section className="container" style={{ padding: '6px 0 8px' }}>
+      <section className="container pricing">
         <div className="grid-2">
           <div id="pricing" className="card reveal" style={{ padding: 22 }}>
             <h2>Pricing</h2>
@@ -142,7 +142,7 @@ export default function Page() {
       </section>
 
       {/* TESTIMONIALS + FAQ */}
-      <section className="container" style={{ padding: '6px 0 24px' }}>
+      <section className="container faq">
         <div className="grid-2">
           <div id="reviews" className="card reveal stack" style={{ padding: 22 }}>
             <h2>Testimonials</h2>
@@ -159,7 +159,7 @@ export default function Page() {
       </section>
 
       {/* CONTACT */}
-      <section id="contact" className="container" style={{ padding: '10px 0 28px' }}>
+      <section id="contact" className="container contact">
         <div className="glass" style={{ padding: 24 }}>
           <div className="grid-2">
             <div className="stack">
@@ -177,9 +177,9 @@ export default function Page() {
         </div>
       </section>
 
-      <footer className="container" role="contentinfo">
+      <footer className="container" role="contentinfo" style={{ paddingBottom: '15px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-          <span>© <span id="y" /> OzBrows</span>
+          <span style={{ padding: '10px 14px'}}>© <span id="y" /> OzBrows</span>
           <a href="#home" className="btn-ghost" aria-label="Back to top">⬆ Back to top</a>
         </div>
       </footer>
