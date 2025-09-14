@@ -1,36 +1,24 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, MouseEvent } from 'react';
 import { Calendar } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 
-const API_BASE = '/api'; // Next.js Route Handlers
+const API_BASE = '/api';
 
-// ---- time utils (узгоджено з беком) ----
+type Booking = { time: string; name: string; phone?: string };
+type DayData = { blocked: string[]; bookings: Booking[] };
+
 const WORK_START = 8, WORK_END = 20;
 const SLOT_MINUTES = 15, SERVICE_DURATION = 45;
 
-function toTime(h: number, m: number) {
-  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
-}
-function parseTime(t: string) {
-  const [hh,mm] = t.split(':').map(Number);
-  return hh*60+mm;
-}
-function minutesToTime(min: number) {
-  return toTime(Math.floor(min/60), min%60);
-}
-function clampEnd(min: number) {
-  return Math.min(min, WORK_END*60);
-}
-function genSlots(step = SLOT_MINUTES) {
-  const out: string[] = [];
-  for (let h=WORK_START; h<WORK_END; h++) {
-    for (let m=0; m<60; m+=step) out.push(toTime(h,m));
-  }
-  return out;
-}
+// ---- time utils ----
+function toTime(h: number, m: number) { return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`; }
+function parseTime(t: string) { const [hh,mm] = t.split(':').map(Number); return hh*60+mm; }
+function minutesToTime(min: number) { return toTime(Math.floor(min/60), min%60); }
+function clampEnd(min: number) { return Math.min(min, WORK_END*60); }
+function genSlots(step = SLOT_MINUTES) { const out:string[]=[]; for(let h=WORK_START;h<WORK_END;h++) for(let m=0;m<60;m+=step) out.push(toTime(h,m)); return out; }
 function rangeTimes(startTimeStr: string, dur = SERVICE_DURATION, step = SLOT_MINUTES) {
   const startMin = parseTime(startTimeStr);
   const hardEnd = clampEnd(startMin + dur);
@@ -41,78 +29,63 @@ function rangeTimes(startTimeStr: string, dur = SERVICE_DURATION, step = SLOT_MI
   return out;
 }
 
-// ---- small helpers ----
-async function loadDay(dateStr: string, asAdmin = false, adminKey?: string) {
-  const headers: Record<string,string> = {};
-  if (asAdmin && adminKey) headers['x-admin-key'] = adminKey;
+// ---- data helpers (typed) ----
+async function loadDay(dateStr: string): Promise<DayData> {
   const url = new URL(`${API_BASE}/availability`, location.origin);
   url.searchParams.set('date', dateStr);
-  url.searchParams.set('_', String(Date.now())); // no-store
-  const res = await fetch(url, { headers, cache: 'no-store' });
+  url.searchParams.set('_', String(Date.now()));
+  const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) throw new Error('availability error');
-  return res.json() as Promise<{ blocked: string[]; bookings: { time:string; name:string; phone?:string }[] }>;
+  const data = (await res.json()) as DayData;
+  return data;
 }
 
-async function apiBook(payload: any, adminKey?: string) {
-  const headers: Record<string,string> = { 'Content-Type': 'application/json' };
-  if (adminKey) headers['x-admin-key'] = adminKey;
+async function apiBook(payload: { date: string; time: string; name: string; phone: string }): Promise<{ ok: boolean } | { error: string }> {
   const res = await fetch(`${API_BASE}/book?_=${Date.now()}`, {
     method: 'POST',
-    headers,
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
     cache: 'no-store',
   });
-  const json = await res.json().catch(() => ({}));
+  const json = (await res.json()) as { ok?: boolean; error?: string };
   if (!res.ok) {
-    const err: any = new Error(json?.error || 'API error');
-    err.status = res.status;
-    err.json = json;
+    const err = new Error(json?.error || 'API error') as Error & { status?: number };
+    (err as any).status = res.status; // this cast is harmless; if your eslint forbids it, add a local disable just for this line.
     throw err;
   }
-  return json;
+  return (json.ok ? { ok: true } : { error: json.error || 'unknown' });
 }
 
 export default function BookingPage() {
   const calRef = useRef<HTMLDivElement>(null);
   const calendarInst = useRef<Calendar | null>(null);
 
-  // UI state
   const [dateStr, setDateStr] = useState<string | null>(null);
   const [slots, setSlots] = useState<string[]>([]);
   const [blocked, setBlocked] = useState<string[]>([]);
-  const [bookings, setBookings] = useState<{ time:string; name:string; phone?:string }[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [busy, setBusy] = useState(false);
 
-  // open modal
   const openForDate = async (d: string) => {
-    setSelected(null);
-    setName('');
-    setPhone('');
-    setDateStr(d);
-
+    setSelected(null); setName(''); setPhone(''); setDateStr(d);
     try {
-      const day = await loadDay(d, false);
-      // заблокуємо також проміжки під існуючі бронювання
+      const day = await loadDay(d);
       const autoBlocked = Array.from(new Set([
-        ...(day.blocked || []),
-        ...((day.bookings || []).flatMap(b => rangeTimes(b.time))),
+        ...(day.blocked ?? []),
+        ...((day.bookings ?? []).flatMap((b) => rangeTimes(b.time))),
       ])).sort((a,b)=>parseTime(a)-parseTime(b));
-
       setBlocked(autoBlocked);
-      setBookings(day.bookings || []);
+      setBookings(day.bookings ?? []);
       setSlots(genSlots());
     } catch {
-      setBlocked([]);
-      setBookings([]);
-      setSlots(genSlots());
+      setBlocked([]); setBookings([]); setSlots(genSlots());
       alert('Не вдалося завантажити зайнятість дня');
     }
   };
 
-  // init FullCalendar once
   useEffect(() => {
     if (!calRef.current) return;
     const cal = new Calendar(calRef.current, {
@@ -127,9 +100,8 @@ export default function BookingPage() {
     return () => { cal.destroy(); calendarInst.current = null; };
   }, []);
 
-  // derived helpers
   const isBlocked = (t: string) => blocked.includes(t);
-  const fitsFrom = (t: string) => !rangeTimes(t).some(s => blocked.includes(s));
+  const fitsFrom = (t: string) => !rangeTimes(t).some((s) => blocked.includes(s));
 
   async function handleConfirm() {
     if (!dateStr || !selected) { alert('Оберіть час'); return; }
@@ -138,28 +110,31 @@ export default function BookingPage() {
     try {
       setBusy(true);
       await apiBook({ date: dateStr, time: selected, name, phone });
-      // оновлюємо локальний список
-      const day = await loadDay(dateStr, false);
+      const day = await loadDay(dateStr);
       const autoBlocked = Array.from(new Set([
-        ...(day.blocked || []),
-        ...((day.bookings || []).flatMap(b => rangeTimes(b.time))),
+        ...(day.blocked ?? []),
+        ...((day.bookings ?? []).flatMap((b) => rangeTimes(b.time))),
       ])).sort((a,b)=>parseTime(a)-parseTime(b));
       setBlocked(autoBlocked);
-      setBookings(day.bookings || []);
-      // закриваємо модалку
+      setBookings(day.bookings ?? []);
       setDateStr(null);
       alert(`Запис підтверджено: ${dateStr} о ${selected}`);
-    } catch (e: any) {
-      if (e?.status === 409) {
+    } catch (err) {
+      const status = (err as Error & { status?: number }).status;
+      if (status === 409) {
         alert('Обраний проміжок вже зайнятий. Оновлюю...');
         if (dateStr) openForDate(dateStr);
       } else {
         alert('Помилка бронювання. Спробуйте ще раз.');
-        console.error(e);
+        console.error(err);
       }
     } finally {
       setBusy(false);
     }
+  }
+
+  function onModalBgClick(e: MouseEvent<HTMLDivElement>) {
+    if (e.target === e.currentTarget) setDateStr(null);
   }
 
   return (
@@ -167,20 +142,13 @@ export default function BookingPage() {
       <h1 className="display">Online Booking</h1>
       <p className="hero-lead">Click a date to choose a time and book your appointment.</p>
 
-      {/* Calendar */}
       <div
         ref={calRef}
-        style={{
-          background: '#fff',
-          borderRadius: '14px',
-          padding: '10px',
-          boxShadow: '0 8px 30px rgba(0,0,0,.08)',
-        }}
+        style={{ background: '#fff', borderRadius: '14px', padding: '10px', boxShadow: '0 8px 30px rgba(0,0,0,.08)' }}
       />
 
-      {/* Modal */}
       {dateStr && (
-        <div className="modal open" onClick={(e) => { if (e.target === e.currentTarget) setDateStr(null); }}>
+        <div className="modal open" onClick={onModalBgClick}>
           <div className="sheet">
             <h3 style={{ margin: 0 }}>Вибір часу</h3>
             <div className="sub">
@@ -188,16 +156,15 @@ export default function BookingPage() {
               {' • '}Робочі години: <b>08:00–20:00</b> • Тривалість: <b>45 хв</b>
             </div>
 
-            {/* Slots */}
             <div className="slots">
               {slots.map((t) => {
-                const blocked = isBlocked(t);
+                const blockedSlot = isBlocked(t);
                 const fits = fitsFrom(t);
-                const disabled = blocked || !fits;
+                const disabled = blockedSlot || !fits;
                 return (
                   <button
                     key={t}
-                    className={`slot${blocked ? ' blocked' : ''}${!fits ? ' notfit' : ''}${selected === t ? ' selected' : ''}`}
+                    className={`slot${blockedSlot ? ' blocked' : ''}${!fits ? ' notfit' : ''}${selected === t ? ' selected' : ''}`}
                     onClick={() => !disabled && setSelected(t)}
                     disabled={disabled}
                   >
@@ -207,7 +174,6 @@ export default function BookingPage() {
               })}
             </div>
 
-            {/* Client form */}
             <div className="form" style={{ marginTop: 10 }}>
               <div>
                 <label>Ім’я
@@ -221,16 +187,15 @@ export default function BookingPage() {
               </div>
             </div>
 
-            {/* Admin list (read-only для клієнта) */}
             {bookings?.length > 0 && (
               <div className="admin-list">
                 <h4>Бронювання на день</h4>
                 <div>
                   {bookings
                     .slice()
-                    .sort((a,b)=>parseTime(a.time)-parseTime(b.time))
+                    .sort((a, b) => parseTime(a.time) - parseTime(b.time))
                     .map((b) => (
-                      <div className="row" key={b.time + b.name}>
+                      <div className="row" key={`${b.time}-${b.name}`}>
                         <span>{b.time}</span>
                         <span>{b.name}</span>
                       </div>
@@ -239,7 +204,6 @@ export default function BookingPage() {
               </div>
             )}
 
-            {/* Buttons */}
             <div className="bar">
               <div className="left" />
               <div className="right">
