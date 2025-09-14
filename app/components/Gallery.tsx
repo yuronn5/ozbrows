@@ -158,7 +158,7 @@ export default function Gallery() {
                     alt={`work-${real + 1}`}
                     onClick={() => openLb(real)}
                   />
-                  <div className={styles.captionAlways}>{item.caption}</div>
+                  <div className={styles.captionAlways} style={{ borderRadius: 16}}>{item.caption}</div>
                 </div>
               </div>
             );
