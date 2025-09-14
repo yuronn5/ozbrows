@@ -307,7 +307,7 @@ section.contact {
   .grid-3 { grid-template-columns: 1fr; }
   .grid-2 { grid-template-columns: 1fr; }
   .grid-1 { grid-template-columns: 1fr; }
-  .gallery { grid-template-columns: 1fr 1fr; }
+  .gallery { grid-template-columns: 1fr; }
   section.container {
         padding-right: 16px;
         padding-left: 16px;
