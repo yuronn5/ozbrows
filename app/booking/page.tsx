@@ -5,6 +5,9 @@ import { Calendar } from "@fullcalendar/core";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin, { DateClickArg } from "@fullcalendar/interaction";
 import "./booking.css";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 
 const API_BASE = "/api";
 
@@ -247,6 +250,12 @@ export default function BookingPage() {
   return (
     <main className="container" style={{ padding: "28px 0 40px" }}>
       <div className="booking__header">
+        <Link href="/" className="back-home-btn">
+      <span className="icon">
+        <ChevronLeft size={20} />
+      </span>
+      <span className="text">Back to Home</span>
+    </Link>
         <h1 className="display" style={{ marginBottom: 6 }}>
           Online Booking
         </h1>
@@ -266,91 +275,125 @@ export default function BookingPage() {
 
       {/* Modal */}
       {dateStr && (
-  <div className="modal open" onClick={onModalBgClick} aria-modal="true" role="dialog">
-    <div className="sheet" role="document">
-      {/* HEADER */}
-      <div className="sheet__header">
-        <div className="sheet__badge" aria-hidden>📅</div>
-        <div className="sheet__titles">
-          <h3 className="sheet__title">Choose a time</h3>
-          <div className="sheet__sub">
-            {new Date(`${dateStr}T12:00:00`).toLocaleDateString('uk-UA', { day: '2-digit', month: 'long', year: 'numeric' })}
-            <span className="dot">•</span> Working hours: <b>08:00–20:00</b>
-            <span className="dot">•</span> <b>45m</b>
-          </div>
-        </div>
-      </div>
+        <div
+          className="modal open"
+          onClick={onModalBgClick}
+          aria-modal="true"
+          role="dialog"
+        >
+          <div className="sheet" role="document">
+            {/* HEADER */}
+            <div className="sheet__header">
+              <div className="sheet__badge" aria-hidden>
+                📅
+              </div>
+              <div className="sheet__titles">
+                <h3 className="sheet__title">Choose a time</h3>
+                <div className="sheet__sub">
+                  {new Date(`${dateStr}T12:00:00`).toLocaleDateString("uk-UA", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                  <span className="dot">•</span> Working hours:{" "}
+                  <b>08:00–20:00</b>
+                  <span className="dot">•</span> <b>45m</b>
+                </div>
+              </div>
+            </div>
 
-      {/* SCROLLABLE BODY */}
-      <div className="sheet__body">
-        <div className="slots" role="listbox" aria-label="Available times">
-          {slots.map((t) => {
-            const blockedSlot = isBlocked(t);
-            const fits = fitsFrom(t);
-            const disabled = blockedSlot || !fits;
-            const selectedNow = selected === t;
-            return (
-              <button
-                key={t}
-                role="option"
-                aria-selected={selectedNow}
-                className={`slot${selectedNow ? ' selected' : ''}${disabled ? ' disabled' : ''}`}
-                onClick={() => !disabled && setSelected(t)}
-                disabled={disabled}
+            {/* SCROLLABLE BODY */}
+            <div className="sheet__body">
+              <div
+                className="slots"
+                role="listbox"
+                aria-label="Available times"
               >
-                {t}
-              </button>
-            );
-          })}
-        </div>
+                {slots.map((t) => {
+                  const blockedSlot = isBlocked(t);
+                  const fits = fitsFrom(t);
+                  const disabled = blockedSlot || !fits;
+                  const selectedNow = selected === t;
+                  return (
+                    <button
+                      key={t}
+                      role="option"
+                      aria-selected={selectedNow}
+                      className={`slot${selectedNow ? " selected" : ""}${
+                        disabled ? " disabled" : ""
+                      }`}
+                      onClick={() => !disabled && setSelected(t)}
+                      disabled={disabled}
+                    >
+                      {t}
+                    </button>
+                  );
+                })}
+              </div>
 
-        {/* FORM */}
-        <div className="form">
-          <div>
-            <label>Ім’я
-              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ім’я" inputMode="text" />
-            </label>
-          </div>
-          <div>
-            <label>Телефон
-              <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+380..." inputMode="tel" />
-            </label>
-          </div>
-        </div>
+              {/* FORM */}
+              <div className="form">
+                <div>
+                  <label>
+                    Ім’я
+                    <input
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Ім’я"
+                      inputMode="text"
+                    />
+                  </label>
+                </div>
+                <div>
+                  <label>
+                    Телефон
+                    <input
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="+380..."
+                      inputMode="tel"
+                    />
+                  </label>
+                </div>
+              </div>
 
-        {bookings?.length > 0 && (
-          <div className="admin-list">
-            <h4>Bookings for this day</h4>
-            <div>
-              {bookings
-                .slice()
-                .sort((a, b) => parseTime(a.time) - parseTime(b.time))
-                .map((b) => (
-                  <div className="row" key={`${b.time}-${b.name}`}>
-                    <span>{b.time}</span>
-                    <span>{b.name}</span>
+              {bookings?.length > 0 && (
+                <div className="admin-list">
+                  <h4>Bookings for this day</h4>
+                  <div>
+                    {bookings
+                      .slice()
+                      .sort((a, b) => parseTime(a.time) - parseTime(b.time))
+                      .map((b) => (
+                        <div className="row" key={`${b.time}-${b.name}`}>
+                          <span>{b.time}</span>
+                          <span>{b.name}</span>
+                        </div>
+                      ))}
                   </div>
-                ))}
+                </div>
+              )}
+            </div>
+
+            {/* STICKY FOOTER */}
+            <div className="sheet__footer">
+              <button
+                className="btn btn--ghost"
+                onClick={() => setDateStr(null)}
+              >
+                Close
+              </button>
+              <button
+                className="btn primary"
+                onClick={handleConfirm}
+                disabled={busy || !selected || !name || !phone}
+              >
+                {busy ? "Saving…" : "Confirm"}
+              </button>
             </div>
           </div>
-        )}
-      </div>
-
-      {/* STICKY FOOTER */}
-      <div className="sheet__footer">
-        <button className="btn btn--ghost" onClick={() => setDateStr(null)}>Close</button>
-        <button
-          className="btn primary"
-          onClick={handleConfirm}
-          disabled={busy || !selected || !name || !phone}
-        >
-          {busy ? 'Saving…' : 'Confirm'}
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
+        </div>
+      )}
     </main>
   );
 }
