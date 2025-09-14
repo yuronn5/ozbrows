@@ -1,7 +1,6 @@
 // app/api/book/route.ts
 import { NextResponse } from 'next/server';
 import { getStore } from '@netlify/blobs';
-// import { notifyTelegram } from '@/lib/notify';
 import { notifyTelegram } from '../../../lib/notify';
 
 type Booking = {
@@ -17,7 +16,7 @@ type DayData = {
   bookings: Booking[];
 };
 
-const WORK_START = 8, WORK_END = 20;
+const WORK_START = 8, WORK_END = 20;          // години (08:00–20:00)
 const SLOT_MINUTES = 15, SERVICE_DURATION = 45;
 
 const noCache: Record<string, string> = {
@@ -28,8 +27,15 @@ const noCache: Record<string, string> = {
 };
 
 // ---- utils ----
-function parseTime(t: string): number { const [h, m] = t.split(':').map(Number); return h * 60 + m; }
-function toTime(min: number): string { const h = Math.floor(min / 60), m = min % 60; return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`; }
+function parseTime(t: string): number {
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + m;
+}
+function toTime(min: number): string {
+  const h = Math.floor(min / 60), m = min % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+/** Повертає усі 15-хв точки в діапазоні тривалості від старту */
 function rangeTimes(startStr: string, dur = SERVICE_DURATION, step = SLOT_MINUTES): string[] {
   const start = parseTime(startStr);
   const end = Math.min(start + dur, WORK_END * 60);
@@ -40,6 +46,14 @@ function rangeTimes(startStr: string, dur = SERVICE_DURATION, step = SLOT_MINUTE
   }
   return out;
 }
+/** Чи старт у робочих годинах з урахуванням тривалості */
+function isStartWithinWorkingHours(startStr: string): boolean {
+  const start = parseTime(startStr);
+  const dayStart = WORK_START * 60;
+  const dayEnd = WORK_END * 60;
+  // старт не раніше відкриття і не так пізно, щоб виходити за межу закриття
+  return start >= dayStart && (start + SERVICE_DURATION) <= dayEnd;
+}
 
 export async function POST(req: Request) {
   try {
@@ -47,8 +61,10 @@ export async function POST(req: Request) {
       | { date?: string; time?: string; name?: string; phone?: string; action?: string }
       | null;
 
-    const date = body?.date;
-    if (!date) return NextResponse.json({ error: 'date required' }, { status: 400, headers: noCache });
+    const date = body?.date?.trim();
+    if (!date) {
+      return NextResponse.json({ error: 'date required' }, { status: 400, headers: noCache });
+    }
 
     const store = getStore({ name: 'bookings' });
     const raw = await store.get(date, { type: 'json' as const });
@@ -63,8 +79,10 @@ export async function POST(req: Request) {
     // ==== ADMIN: block/unblock whole day ====
     if (action === 'block-day' && isAdmin) {
       const all: string[] = [];
-      for (let h = WORK_START; h < WORK_END; h++) for (let m = 0; m < 60; m += SLOT_MINUTES) {
-        all.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+      for (let h = WORK_START; h < WORK_END; h++) {
+        for (let m = 0; m < 60; m += SLOT_MINUTES) {
+          all.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+        }
       }
       day.blocked = Array.from(new Set([...(day.blocked ?? []), ...all])).sort();
       await setDay(day);
@@ -80,8 +98,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true }, { status: 200, headers: noCache });
     }
 
-    const time = body?.time;
-    if (!time) return NextResponse.json({ error: 'time required' }, { status: 400, headers: noCache });
+    const time = body?.time?.trim();
+    if (!time) {
+      return NextResponse.json({ error: 'time required' }, { status: 400, headers: noCache });
+    }
+
+    // ❗ Перевірка робочих годин з урахуванням тривалості послуги
+    if (!isStartWithinWorkingHours(time)) {
+      return NextResponse.json({ error: 'outside working hours' }, { status: 400, headers: noCache });
+    }
 
     // check conflicts
     const span = rangeTimes(time);
@@ -90,7 +115,9 @@ export async function POST(req: Request) {
       ...((day.bookings ?? []).flatMap((b) => rangeTimes(b.time))),
     ]);
     const conflict = span.some((t) => occupied.has(t));
-    if (conflict) return NextResponse.json({ error: 'conflict' }, { status: 409, headers: noCache });
+    if (conflict) {
+      return NextResponse.json({ error: 'conflict' }, { status: 409, headers: noCache });
+    }
 
     // ==== ADMIN: block range ====
     if (isAdmin && action === 'admin-block') {

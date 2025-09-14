@@ -251,11 +251,11 @@ export default function BookingPage() {
     <main className="container" style={{ padding: "28px 0 40px" }}>
       <div className="booking__header">
         <Link href="/" className="back-home-btn">
-      <span className="icon">
-        <ChevronLeft size={20} />
-      </span>
-      <span className="text">Back to Home</span>
-    </Link>
+          <span className="icon">
+            <ChevronLeft size={20} />
+          </span>
+          <span className="text">Back to Home</span>
+        </Link>
         <h1 className="display" style={{ marginBottom: 6 }}>
           Online Booking
         </h1>
@@ -312,7 +312,9 @@ export default function BookingPage() {
                 {slots.map((t) => {
                   const blockedSlot = isBlocked(t);
                   const fits = fitsFrom(t);
-                  const disabled = blockedSlot || !fits;
+                  const overflows = (t: string) =>
+                    parseTime(t) + SERVICE_DURATION > WORK_END * 60;
+                  const disabled = blockedSlot || !fits || overflows(t);
                   const selectedNow = selected === t;
                   return (
                     <button
