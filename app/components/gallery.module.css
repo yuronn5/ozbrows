@@ -137,3 +137,56 @@
   .lbArrow { width: 44px; height: 44px; font-size: 26px; }
   .lbClose { width: 40px; height: 40px; font-size: 24px; }
 }
+.imgWrapper {
+  position: relative;
+  overflow: hidden;
+}
+
+.caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 14px;
+  text-align: center;
+  padding: 8px;
+  opacity: 0;
+  transform: translateY(100%);
+  transition: all 0.3s ease;
+}
+
+.imgWrapper:hover .caption {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.lbCaption {
+  margin-top: 12px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+}
+.imgWrapper {
+  position: relative;
+  overflow: hidden;
+}
+
+.captionAlways {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 22%;              /* смужка займає ~1/5 висоти фото */
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 6px;
+}
