@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, MouseEvent } from 'react';
 import { Calendar } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
-import interactionPlugin from '@fullcalendar/interaction';
+import interactionPlugin, { DateClickArg } from '@fullcalendar/interaction';
 
 const API_BASE = '/api';
 
@@ -12,6 +12,15 @@ type DayData = { blocked: string[]; bookings: Booking[] };
 
 const WORK_START = 8, WORK_END = 20;
 const SLOT_MINUTES = 15, SERVICE_DURATION = 45;
+
+/** HTTP error with status (щоб не кастити до any) */
+class HttpError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+}
 
 // ---- time utils ----
 function toTime(h: number, m: number) { return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`; }
@@ -35,25 +44,24 @@ async function loadDay(dateStr: string): Promise<DayData> {
   url.searchParams.set('date', dateStr);
   url.searchParams.set('_', String(Date.now()));
   const res = await fetch(url, { cache: 'no-store' });
-  if (!res.ok) throw new Error('availability error');
-  const data = (await res.json()) as DayData;
-  return data;
+  if (!res.ok) throw new HttpError('availability error', res.status);
+  return (await res.json()) as DayData;
 }
 
-async function apiBook(payload: { date: string; time: string; name: string; phone: string }): Promise<{ ok: boolean } | { error: string }> {
+type BookPayload = { date: string; time: string; name: string; phone: string };
+type ApiOk = { ok: true };
+type ApiErr = { error: string };
+
+async function apiBook(payload: BookPayload): Promise<ApiOk> {
   const res = await fetch(`${API_BASE}/book?_=${Date.now()}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
     cache: 'no-store',
   });
-  const json = (await res.json()) as { ok?: boolean; error?: string };
-  if (!res.ok) {
-    const err = new Error(json?.error || 'API error') as Error & { status?: number };
-    (err as any).status = res.status; // this cast is harmless; if your eslint forbids it, add a local disable just for this line.
-    throw err;
-  }
-  return (json.ok ? { ok: true } : { error: json.error || 'unknown' });
+  const json = (await res.json()) as ApiOk | ApiErr;
+  if (!res.ok) throw new HttpError(('error' in json ? json.error : 'API error'), res.status);
+  return json as ApiOk;
 }
 
 export default function BookingPage() {
@@ -93,7 +101,7 @@ export default function BookingPage() {
       initialView: 'dayGridMonth',
       height: 'auto',
       selectable: true,
-      dateClick: (info) => openForDate(info.dateStr),
+      dateClick: (info: DateClickArg) => openForDate(info.dateStr),
     });
     cal.render();
     calendarInst.current = cal;
@@ -120,8 +128,7 @@ export default function BookingPage() {
       setDateStr(null);
       alert(`Запис підтверджено: ${dateStr} о ${selected}`);
     } catch (err) {
-      const status = (err as Error & { status?: number }).status;
-      if (status === 409) {
+      if (err instanceof HttpError && err.status === 409) {
         alert('Обраний проміжок вже зайнятий. Оновлюю...');
         if (dateStr) openForDate(dateStr);
       } else {
