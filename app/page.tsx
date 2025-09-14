@@ -1,6 +1,7 @@
 // app/page.tsx
 'use client';
 import { useEffect } from 'react';
+import Link from "next/link";
 
 export default function Page() {
   useEffect(() => {
@@ -68,6 +69,7 @@ export default function Page() {
             <a href="#reviews">Відгуки</a>
             <a href="#faq">FAQ</a>
             <a href="#contact">Контакти</a>
+            <Link href="/booking">Бронювання</Link>
           </div>
           <a className="btn" href="#" data-book-url="https://calendly.com/your-link">Записатися</a>
         </div>
