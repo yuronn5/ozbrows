@@ -45,12 +45,10 @@ export default function AdminPage() {
   }, [rows, q]);
 
   async function ensureAdminKey(): Promise<string> {
-  // читаємо з state/session
   let key = typeof window !== 'undefined' ? sessionStorage.getItem('ADMIN_KEY') || '' : '';
   if (!key) {
-    // просимо у користувача
     const pin = typeof window !== 'undefined' ? prompt('Enter admin PIN') || '' : '';
-    if (!pin) throw new Error('Canceled'); // користувач передумав
+    if (!pin) throw new Error('Canceled');
     key = pin;
     sessionStorage.setItem('ADMIN_KEY', key);
   }
@@ -63,30 +61,35 @@ export default function AdminPage() {
   method: 'GET' | 'POST' = 'GET',
   body?: unknown
 ): Promise<T> {
-  const key = await ensureAdminKey(); // <- гарантуємо наявність PIN тут
+  let key = await ensureAdminKey();
 
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    'X-Admin-Key': key,
+  const doFetch = async (k: string): Promise<Response> => {
+    let url = `${API_BASE}${path}`;
+    if (method === 'GET' && params && Object.keys(params).length) {
+      const u = new URL(url, location.origin);
+      Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v));
+      u.searchParams.set('_', String(Date.now()));
+      url = u.toString();
+    }
+    return fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Key': k },
+      body: body ? JSON.stringify(body) : null,
+      cache: 'no-store',
+    });
   };
 
-  let url = `${API_BASE}${path}`;
-  if (method === 'GET' && params && Object.keys(params).length) {
-    const u = new URL(url, location.origin);
-    Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v));
-    u.searchParams.set('_', String(Date.now())); // cache-bust
-    url = u.toString();
+  // перша спроба
+  let res = await doFetch(key);
+  if (res.status === 401) {
+    // очищаємо і даємо шанс ще раз
+    sessionStorage.removeItem('ADMIN_KEY');
+    key = await ensureAdminKey();
+    res = await doFetch(key);
   }
 
-  const res = await fetch(url, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : null,
-    cache: 'no-store',
-  });
-
   const json = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error((json as { error?: string }).error || 'API error');
+  if (!res.ok) throw new Error((json as { error?: string })?.error || 'API error');
   return json as T;
 }
 
