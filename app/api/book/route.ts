@@ -1,7 +1,8 @@
 // app/api/book/route.ts
 import { NextResponse } from 'next/server';
 import { getStore } from '@netlify/blobs';
-import { notifyTelegram } from '@/lib/notify';
+// import { notifyTelegram } from '@/lib/notify';
+import { notifyTelegram } from '../../../lib/notify';
 
 type Booking = {
   time: string;
