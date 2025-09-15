@@ -4,9 +4,9 @@ import { useEffect } from "react";
 import { createPortal } from "react-dom";
 
 export type Service = {
-  id: string;            // те, що піде в query (?service=shaping)
-  title: string;         // назва в UI
-  price: string;         // ціна в UI
+  id: string; // те, що піде в query (?service=shaping)
+  title: string; // назва в UI
+  price: string; // ціна в UI
 };
 
 export default function PricesModal({
@@ -114,7 +114,9 @@ export default function PricesModal({
               }}
             >
               <span style={{ fontWeight: 600 }}>{s.title}</span>
-              <span style={{ fontWeight: 700, color: "#6e4b3a" }}>{s.price}</span>
+              <span style={{ fontWeight: 700, color: "#6e4b3a" }}>
+                {s.price}
+              </span>
             </button>
           ))}
         </div>

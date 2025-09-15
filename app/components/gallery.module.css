@@ -7,13 +7,13 @@
   font-family: "Cormorant Garamond", Georgia, serif;
 }
 .viewport {
-  --pv: 4;                 /* значення за замовчуванням; JS ставить актуальне */
+  --pv: 4; /* значення за замовчуванням; JS ставить актуальне */
   position: relative;
   overflow: hidden;
   border-radius: 20px;
-  background: rgba(255,255,255,0.6);
-  border: 1px solid rgba(255,255,255,0.55);
-  box-shadow: 0 10px 30px rgba(70,50,30,0.08);
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 10px 30px rgba(70, 50, 30, 0.08);
 }
 .track {
   display: flex;
@@ -28,7 +28,7 @@
   width: 100%;
   display: block;
   border-radius: 18px;
-  aspect-ratio: 3 / 4;      /* охайне однакове співвідношення */
+  aspect-ratio: 3 / 4; /* охайне однакове співвідношення */
   object-fit: cover;
   box-shadow: 0 8px 20px rgba(110, 75, 58, 0.12);
   cursor: zoom-in;
@@ -36,7 +36,7 @@
 
 /* Arrows */
 .controls {
-  pointer-events: none;      /* щоб кліки проходили тільки по кнопках */
+  pointer-events: none; /* щоб кліки проходили тільки по кнопках */
 }
 .arrow {
   pointer-events: auto;
@@ -46,34 +46,44 @@
   width: clamp(40px, 7vw, 52px);
   height: clamp(40px, 7vw, 52px);
   border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.7);
-  background:
-    radial-gradient(80% 80% at 30% 20%, #fff 0%, #f6efe9 100%);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: radial-gradient(80% 80% at 30% 20%, #fff 0%, #f6efe9 100%);
   box-shadow: 0 10px 24px rgba(110, 75, 58, 0.18);
   display: grid;
   place-items: center;
   font-size: clamp(22px, 4vw, 26px);
   color: #2b2623;
-  transition: transform .15s ease, box-shadow .2s ease;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
 }
-.arrow:hover { transform: translateY(-50%) scale(1.04); box-shadow: 0 14px 28px rgba(110,75,58,.24); }
-.left  { left: 14px; }
-.right { right: 14px; }
+.arrow:hover {
+  transform: translateY(-50%) scale(1.04);
+  box-shadow: 0 14px 28px rgba(110, 75, 58, 0.24);
+}
+.left {
+  left: 14px;
+}
+.right {
+  right: 14px;
+}
 
 /* Lightbox */
 .lb {
   position: fixed;
   inset: 0;
-  z-index: 9999;                /* було замало — тепер перекриє все */
+  z-index: 9999; /* було замало — тепер перекриє все */
   display: grid;
   place-items: center;
   background: rgba(0, 0, 0, 0.66);
   backdrop-filter: blur(2px);
-  animation: lbFade .18s ease;
+  animation: lbFade 0.18s ease;
 }
 @keyframes lbFade {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 .lbFrame {
   position: relative;
@@ -81,16 +91,16 @@
   max-height: 88vh;
   border-radius: 16px;
   overflow: hidden;
-  background: #111;             /* темна підкладка позаду фото */
-  box-shadow: 0 30px 60px rgba(0,0,0,.45);
+  background: #111; /* темна підкладка позаду фото */
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45);
 }
 .lbImg {
   width: 100%;
   height: auto;
-  max-height: 88vh;             /* щоб не “тиснуло” низ */
-  object-fit: contain;          /* акуратно вміщується */
+  max-height: 88vh; /* щоб не “тиснуло” низ */
+  object-fit: contain; /* акуратно вміщується */
   display: block;
-  background: #111; 
+  background: #111;
 }
 .lbClose {
   position: absolute;
@@ -104,11 +114,14 @@
   font-size: 26px;
   line-height: 1;
   cursor: pointer;
-  background: rgba(255,255,255,.18);
+  background: rgba(255, 255, 255, 0.18);
   backdrop-filter: blur(6px);
-  transition: transform .15s ease, background .2s ease;
+  transition: transform 0.15s ease, background 0.2s ease;
 }
-.lbClose:hover { transform: scale(1.05); background: rgba(255,255,255,.24); }
+.lbClose:hover {
+  transform: scale(1.05);
+  background: rgba(255, 255, 255, 0.24);
+}
 
 .lbArrow {
   position: absolute;
@@ -122,20 +135,38 @@
   font-size: 28px;
   line-height: 1;
   cursor: pointer;
-  background: rgba(255,255,255,.18);
+  background: rgba(255, 255, 255, 0.18);
   backdrop-filter: blur(6px);
-  transition: transform .15s ease, background .2s ease;
+  transition: transform 0.15s ease, background 0.2s ease;
 }
-.lbArrow:hover { transform: translateY(-50%) scale(1.05); background: rgba(255,255,255,.24); }
+.lbArrow:hover {
+  transform: translateY(-50%) scale(1.05);
+  background: rgba(255, 255, 255, 0.24);
+}
 
-.lbLeft  { left: 10px; }
-.lbRight { right: 10px; }
+.lbLeft {
+  left: 10px;
+}
+.lbRight {
+  right: 10px;
+}
 
 /* Трохи компактніше на телефонах */
 @media (max-width: 540px) {
-  .lbFrame { width: 96vw; max-height: 86vh; }
-  .lbArrow { width: 44px; height: 44px; font-size: 26px; }
-  .lbClose { width: 40px; height: 40px; font-size: 24px; }
+  .lbFrame {
+    width: 96vw;
+    max-height: 86vh;
+  }
+  .lbArrow {
+    width: 44px;
+    height: 44px;
+    font-size: 26px;
+  }
+  .lbClose {
+    width: 40px;
+    height: 40px;
+    font-size: 24px;
+  }
 }
 .imgWrapper {
   position: relative;
@@ -179,7 +210,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 22%;              /* смужка займає ~1/5 висоти фото */
+  height: 22%; /* смужка займає ~1/5 висоти фото */
   background: rgba(0, 0, 0, 0.55);
   color: #fff;
   font-size: 15px;

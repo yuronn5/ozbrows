@@ -110,7 +110,8 @@ export default function Gallery() {
   };
   const closeLb = () => setLbOpen(false);
   const lbNext = () => setLbIndex((v) => (v + 1) % images.length);
-  const lbPrev = () => setLbIndex((v) => (v - 1 + images.length) % images.length);
+  const lbPrev = () =>
+    setLbIndex((v) => (v - 1 + images.length) % images.length);
 
   useEffect(() => {
     if (!lbOpen) return;
@@ -158,7 +159,12 @@ export default function Gallery() {
                     alt={`work-${real + 1}`}
                     onClick={() => openLb(real)}
                   />
-                  <div className={styles.captionAlways} style={{ borderRadius: 16}}>{item.caption}</div>
+                  <div
+                    className={styles.captionAlways}
+                    style={{ borderRadius: 16 }}
+                  >
+                    {item.caption}
+                  </div>
                 </div>
               </div>
             );
@@ -185,7 +191,12 @@ export default function Gallery() {
 
       {lbOpen &&
         createPortal(
-          <div className={styles.lb} role="dialog" aria-modal="true" onClick={closeLb}>
+          <div
+            className={styles.lb}
+            role="dialog"
+            aria-modal="true"
+            onClick={closeLb}
+          >
             <div
               className={styles.lbFrame}
               role="document"
@@ -197,7 +208,11 @@ export default function Gallery() {
                 alt={`Full ${lbIndex + 1}`}
               />
               <p className={styles.lbCaption}>{images[lbIndex].caption}</p>
-              <button className={styles.lbClose} onClick={closeLb} aria-label="Close">
+              <button
+                className={styles.lbClose}
+                onClick={closeLb}
+                aria-label="Close"
+              >
                 ×
               </button>
               <button
