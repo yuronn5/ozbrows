@@ -7,18 +7,22 @@ import interactionPlugin, { DateClickArg } from "@fullcalendar/interaction";
 import "./booking.css";
 import "../globals.css";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { ChevronLeft } from "lucide-react";
 
 const API_BASE = "/api";
 
-type Booking = { time: string; name: string; phone?: string };
+type Booking = {
+  time: string;
+  name: string;
+  phone?: string;
+  durationMin?: number; // приходить з /availability (для клієнтського блокування)
+};
 type DayData = { blocked: string[]; bookings: Booking[] };
 
 const WORK_START = 8,
   WORK_END = 20;
 const SLOT_MINUTES = 15,
-  SERVICE_DURATION = 45;
+  SERVICE_DURATION = 45; // дефолт, якщо послугу ще не обрали
 
 /** HttpError з кодом статусу — щоб не використовувати any */
 class HttpError extends Error {
@@ -43,15 +47,13 @@ function minutesToTime(min: number) {
 function clampEnd(min: number) {
   return Math.min(min, WORK_END * 60);
 }
-function genSlots(step = SLOT_MINUTES) {
+function genSlots(step = SLOT_MINUTES, durationMin = SERVICE_DURATION) {
   const out: string[] = [];
-  const latestStart = WORK_END * 60 - SERVICE_DURATION; // останній час, з якого ще влазимо
+  const latestStart = WORK_END * 60 - durationMin; // останній старт під тривалість
   for (let h = WORK_START; h < WORK_END; h++) {
     for (let m = 0; m < 60; m += step) {
       const min = h * 60 + m;
-      if (min <= latestStart) {
-        out.push(toTime(h, m));
-      }
+      if (min <= latestStart) out.push(toTime(h, m));
     }
   }
   return out;
@@ -82,7 +84,13 @@ async function loadDay(dateStr: string): Promise<DayData> {
   return (await res.json()) as DayData;
 }
 
-type BookPayload = { date: string; time: string; name: string; phone: string };
+type BookPayload = {
+  date: string;
+  time: string;
+  name: string;
+  phone: string;
+  durationMin?: number; // ← важливо: реальна тривалість
+};
 type ApiOk = { ok: true };
 type ApiErr = { error: string };
 
@@ -114,6 +122,51 @@ export default function BookingPage() {
   const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
 
+  // вибрана послуга (може прийти з localStorage або з CustomEvent від модалки)
+  const [selectedService, setSelectedService] = useState<null | {
+    title?: string;
+    price?: string;
+    durationMin: number;
+  }>(null);
+
+  // 1) Ініціалізація з localStorage (щоб 45m не миготіло)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("selectedService");
+      if (raw) {
+        const svc = JSON.parse(raw) as {
+          title?: string;
+          price?: string;
+          durationMin: number;
+        };
+        if (svc?.durationMin && Number.isFinite(svc.durationMin)) {
+          setSelectedService(svc);
+          setSlots(genSlots(SLOT_MINUTES, svc.durationMin));
+        }
+      }
+    } catch {}
+  }, []);
+
+  // 2) Живе оновлення з модалки (дублює localStorage, але корисне для UX)
+  useEffect(() => {
+    const onPick = (e: Event) => {
+      const det = (e as CustomEvent).detail as
+        | { title?: string; price?: string; durationMin: number }
+        | undefined;
+      if (!det) return;
+      setSelectedService({ ...det });
+      setSlots(genSlots(SLOT_MINUTES, det.durationMin));
+      try {
+        localStorage.setItem("selectedService", JSON.stringify(det));
+      } catch {}
+    };
+    window.addEventListener("service:select", onPick as EventListener);
+    return () =>
+      window.removeEventListener("service:select", onPick as EventListener);
+  }, []);
+
+  const durationNow = selectedService?.durationMin ?? SERVICE_DURATION;
+
   /* відкриття “модалки” для дати */
   const openForDate = async (d: string) => {
     setSelected(null);
@@ -125,16 +178,19 @@ export default function BookingPage() {
       const autoBlocked = Array.from(
         new Set([
           ...(day.blocked ?? []),
-          ...(day.bookings ?? []).flatMap((b) => rangeTimes(b.time)),
+          // існуючі бронювання — з їхньою фактичною тривалістю
+          ...(day.bookings ?? []).flatMap((b) =>
+            rangeTimes(b.time, b.durationMin ?? SERVICE_DURATION)
+          ),
         ])
       ).sort((a, b) => parseTime(a) - parseTime(b));
       setBlocked(autoBlocked);
       setBookings(day.bookings ?? []);
-      setSlots(genSlots());
+      setSlots(genSlots(SLOT_MINUTES, durationNow));
     } catch {
       setBlocked([]);
       setBookings([]);
-      setSlots(genSlots());
+      setSlots(genSlots(SLOT_MINUTES, durationNow));
       // eslint-disable-next-line no-alert
       alert("Не вдалося завантажити зайнятість дня");
     }
@@ -195,7 +251,9 @@ export default function BookingPage() {
 
   const isBlocked = (t: string) => blocked.includes(t);
   const fitsFrom = (t: string) =>
-    !rangeTimes(t).some((s) => blocked.includes(s));
+    !rangeTimes(t, durationNow).some((s) => blocked.includes(s));
+  const overflows = (t: string) =>
+    parseTime(t) + durationNow > WORK_END * 60;
 
   async function handleConfirm() {
     if (!dateStr || !selected) {
@@ -209,12 +267,20 @@ export default function BookingPage() {
 
     try {
       setBusy(true);
-      await apiBook({ date: dateStr, time: selected, name, phone });
+      await apiBook({
+        date: dateStr,
+        time: selected,
+        name,
+        phone,
+        durationMin: durationNow,
+      });
       const day = await loadDay(dateStr);
       const autoBlocked = Array.from(
         new Set([
           ...(day.blocked ?? []),
-          ...(day.bookings ?? []).flatMap((b) => rangeTimes(b.time)),
+          ...(day.bookings ?? []).flatMap((b) =>
+            rangeTimes(b.time, b.durationMin ?? SERVICE_DURATION)
+          ),
         ])
       ).sort((a, b) => parseTime(a) - parseTime(b));
       setBlocked(autoBlocked);
@@ -273,10 +339,7 @@ export default function BookingPage() {
       </div>
 
       <div className="booking__wrap">
-        <div
-          className="booking__card"
-          aria-label="Calendar for choosing a date"
-        >
+        <div className="booking__card" aria-label="Calendar for choosing a date">
           <div ref={calRef} />
         </div>
       </div>
@@ -298,14 +361,9 @@ export default function BookingPage() {
               <div className="sheet__titles">
                 <h3 className="sheet__title">Choose a time</h3>
                 <div className="sheet__sub">
-                  {new Date(`${dateStr}T12:00:00`).toLocaleDateString("uk-UA", {
-                    day: "2-digit",
-                    month: "long",
-                    year: "numeric",
-                  })}
-                  <span className="dot">•</span> Working hours:{" "}
-                  <b>08:00–20:00</b>
-                  <span className="dot">•</span> <b>45m</b>
+                  {prettyDate}
+                  <span className="dot">•</span> Working hours: <b>08:00–20:00</b>
+                  <span className="dot">•</span> <b>{durationNow}m</b>
                 </div>
               </div>
             </div>
@@ -318,11 +376,8 @@ export default function BookingPage() {
                 aria-label="Available times"
               >
                 {slots.map((t) => {
-                  const blockedSlot = isBlocked(t);
-                  const fits = fitsFrom(t);
-                  const overflows = (t: string) =>
-                    parseTime(t) + SERVICE_DURATION > WORK_END * 60;
-                  const disabled = blockedSlot || !fits || overflows(t);
+                  const disabled =
+                    isBlocked(t) || !fitsFrom(t) || overflows(t);
                   const selectedNow = selected === t;
                   return (
                     <button
@@ -376,7 +431,10 @@ export default function BookingPage() {
                       .sort((a, b) => parseTime(a.time) - parseTime(b.time))
                       .map((b) => (
                         <div className="row" key={`${b.time}-${b.name}`}>
-                          <span>{b.time}</span>
+                          <span>
+                            {b.time}
+                            {b.durationMin ? ` (${b.durationMin}m)` : ""}
+                          </span>
                           <span>{b.name}</span>
                         </div>
                       ))}

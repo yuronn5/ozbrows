@@ -9,6 +9,11 @@ type Booking = {
   phone?: string;
   paid?: boolean;
   paymentId?: string | null;
+  /** додано: тривалість бронювання у хвилинах */
+  durationMin?: number;
+  /** опційно: назва послуги / ціна */
+  serviceTitle?: string;
+  price?: string;
 };
 
 type DayData = {
@@ -54,12 +59,15 @@ function rangeTimes(
   return out;
 }
 /** Чи старт у робочих годинах з урахуванням тривалості */
-function isStartWithinWorkingHours(startStr: string): boolean {
+function isStartWithinWorkingHours(
+  startStr: string,
+  durationMin = SERVICE_DURATION
+): boolean {
   const start = parseTime(startStr);
   const dayStart = WORK_START * 60;
   const dayEnd = WORK_END * 60;
   // старт не раніше відкриття і не так пізно, щоб виходити за межу закриття
-  return start >= dayStart && start + SERVICE_DURATION <= dayEnd;
+  return start >= dayStart && start + durationMin <= dayEnd;
 }
 
 export async function POST(req: Request) {
@@ -70,6 +78,10 @@ export async function POST(req: Request) {
       name?: string;
       phone?: string;
       action?: string;
+      /** нові поля від клієнта */
+      durationMin?: number;
+      serviceTitle?: string;
+      price?: string;
     } | null;
 
     const date = body?.date?.trim();
@@ -129,19 +141,27 @@ export async function POST(req: Request) {
       );
     }
 
+    // читаємо тривалість із тіла запиту (з дефолтом і межами)
+    const durationMin = Math.max(
+      5,
+      Math.min(8 * 60, Number(body?.durationMin ?? SERVICE_DURATION))
+    );
+
     // ❗ Перевірка робочих годин з урахуванням тривалості послуги
-    if (!isStartWithinWorkingHours(time)) {
+    if (!isStartWithinWorkingHours(time, durationMin)) {
       return NextResponse.json(
         { error: "outside working hours" },
         { status: 400, headers: noCache }
       );
     }
 
-    // check conflicts
-    const span = rangeTimes(time);
+    // check conflicts (існуючі бронювання можуть мати власну тривалість)
+    const span = rangeTimes(time, durationMin);
     const occupied = new Set<string>([
       ...(day.blocked ?? []),
-      ...(day.bookings ?? []).flatMap((b) => rangeTimes(b.time)),
+      ...(day.bookings ?? []).flatMap((b) =>
+        rangeTimes(b.time, b.durationMin ?? SERVICE_DURATION)
+      ),
     ]);
     const conflict = span.some((t) => occupied.has(t));
     if (conflict) {
@@ -158,7 +178,7 @@ export async function POST(req: Request) {
       ).sort();
       await setDay(day);
       await notifyTelegram(
-        `⛔️ Interval blocked by admin\nDate: ${date}\nStart: ${time} (${SERVICE_DURATION} minutes)`
+        `⛔️ Interval blocked by admin\nDate: ${date}\nStart: ${time} (${durationMin} minutes)`
       );
       return NextResponse.json({ ok: true }, { status: 200, headers: noCache });
     }
@@ -175,13 +195,22 @@ export async function POST(req: Request) {
 
     day.bookings = [
       ...(day.bookings ?? []),
-      { time, name, phone, paid: false, paymentId: null },
+      {
+        time,
+        name,
+        phone,
+        paid: false,
+        paymentId: null,
+        durationMin,
+        serviceTitle: body?.serviceTitle,
+        price: body?.price,
+      },
     ];
     day.blocked = Array.from(new Set([...(day.blocked ?? []), ...span])).sort();
     await setDay(day);
 
     await notifyTelegram(
-      `🔔 NEW BOOKING\nDate: ${date}\nTime: ${time}\nName: ${name}\nPhone: ${phone}`
+      `🔔 NEW BOOKING\nDate: ${date}\nTime: ${time} (${durationMin}m)\nService: ${body?.serviceTitle ?? "—"}\nPrice: ${body?.price ?? "—"}\nName: ${name}\nPhone: ${phone}`
     );
 
     return NextResponse.json({ ok: true }, { status: 200, headers: noCache });

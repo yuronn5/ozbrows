@@ -18,7 +18,7 @@ export default function Page() {
   { id: "brow-tint", title: "Brow tint", price: "$40", duration: "25 min", category: "Brows" },
   { id: "wax-brows", title: "Wax brows", price: "$25", duration: "15 min", category: "Brows" },
   { id: "wax-tint", title: "Wax + tint", price: "$50", duration: "40 min", category: "Brows" },
-  { id: "lip-wax", title: "Lip wax", price: "$10", duration: "7 min", category: "Brows" },
+  { id: "lip-wax", title: "Lip wax", price: "$10", duration: "15 min", category: "Brows" },
 
   // Lashes
   { id: "lash-lift", title: "Lash lift (tint included)", price: "$100", duration: "1 h 30 min", category: "Lashes" },
@@ -320,7 +320,7 @@ export default function Page() {
           </div> */}
 
           <div id="pricing" className="card reveal" style={{ padding: 22 }}>
-            <h2>Pricing</h2>
+            <h2>забрати секцію, зробити тестімонілс ширшою</h2>
             <div className="price-row">
               <span>Brow Shaping</span>
               <span className="price">$30</span>

@@ -8,6 +8,11 @@ type Booking = {
   phone?: string;
   paid?: boolean;
   paymentId?: string | null;
+  /** додано: тривалість бронювання у хвилинах */
+  durationMin?: number;
+  /** опційно: назва послуги / ціна */
+  serviceTitle?: string;
+  price?: string;
 };
 
 type DayData = {
@@ -43,9 +48,14 @@ export async function GET(req: Request) {
       bookings: [],
     };
 
+    // якщо не адмін — повертаємо тільки time + durationMin (для коректного блокування на клієнті)
     const safeBookings: Booking[] = isAdmin
       ? day.bookings ?? []
-      : (day.bookings ?? []).map((b) => ({ time: b.time, name: "Зайнято" }));
+      : (day.bookings ?? []).map((b) => ({
+          time: b.time,
+          name: "Зайнято",
+          durationMin: b.durationMin ?? 45,
+        }));
 
     return new NextResponse(
       JSON.stringify({ blocked: day.blocked ?? [], bookings: safeBookings }),
