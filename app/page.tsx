@@ -1,10 +1,34 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from "next/link";
 import Nav from './components/Nav';
 import Gallery from './components/Gallery';
+import { createPortal } from 'react-dom';
+import './globals.css';
+import { useRouter } from "next/navigation";
+import PricesModal, { Service } from "./components/PricesModal";
 
 export default function Page() {
+ const [showPrices, setShowPrices] = useState(false);
+  const router = useRouter();
+  const services: Service[] = [
+    { id: "shaping",    title: "Brow Shaping",                     price: "$30" },
+    { id: "tinting",    title: "Brow Tinting",                     price: "$40" },
+    { id: "lamination", title: "Brow Lamination",                  price: "$50" },
+    { id: "combo-st",   title: "Shaping + Tinting",                price: "$65" },
+    { id: "combo-sl",   title: "Shaping + Lamination",             price: "$75" },
+    { id: "combo-lt",   title: "Lamination + Tinting",             price: "$85" },
+    { id: "full",       title: "Full Combo (Shape+Lam+Tint)",      price: "$110" },
+  ];
+  const openPricesModal = () => setShowPrices(true);
+  const closePricesModal = () => setShowPrices(false);
+
+  const handleSelectService = (s: Service) => {
+    // закриваємо модал і переходимо з query ?service=
+    closePricesModal();
+    router.push(`/booking?service=${encodeURIComponent(s.id)}`);
+  };
+
   useEffect(() => {
     // Smooth-scroll for anchors
     document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach((a) => {
@@ -121,7 +145,22 @@ document.querySelectorAll<HTMLElement>('.faq-item .faq-a').forEach((p) => ro.obs
               Professional shaping, lamination, and tinting. Precise form, long-lasting results, and gentle care.
             </p>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' as const }}>
-              <a className="btn" href="#" data-book-url="https://calendly.com/your-link">Book Now</a>
+              <a
+        className="btn"
+        href="#"
+        onClick={(e) => {
+          e.preventDefault();
+          openPricesModal();
+        }}
+      >
+        Book Now
+      </a>
+              <PricesModal
+        open={showPrices}
+        onClose={closePricesModal}
+        onSelect={handleSelectService}
+        services={services}
+      />
               <a className="btn-ghost" href="#gallery">View Works</a>
             </div>
             <div className="stats">
@@ -195,12 +234,15 @@ document.querySelectorAll<HTMLElement>('.faq-item .faq-a').forEach((p) => ro.obs
             <div className="faq-item"><button className="faq-q" aria-expanded="false">How long does tinting last?<span>▾</span></button><div className="faq-a">Usually 3–4 weeks, depending on skin type and home care.</div></div>
             <div className="faq-item"><button className="faq-q" aria-expanded="false">How often should I do shaping?<span>▾</span></button><div className="faq-a">Every 3–5 weeks to maintain clear form and neat look.</div></div>
           </div> */}
+
           <div id="pricing" className="card reveal" style={{ padding: 22 }}>
+          
             <h2>Pricing</h2>
             <div className="price-row"><span>Brow Shaping</span><span className="price">$30</span></div>
             <div className="price-row"><span>Brow Tinting</span><span className="price">$40</span></div>
             <div className="price-row"><span>Brow Lamination</span><span className="price">$50</span></div>
           </div>
+          {/* <Pricing /> */}
         </div>
       </section>
 
