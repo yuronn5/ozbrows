@@ -12,14 +12,24 @@ export default function Page() {
   const [showPrices, setShowPrices] = useState(false);
   const router = useRouter();
   const services: Service[] = [
-    { id: "shaping", title: "Brow Shaping", price: "$30" },
-    { id: "tinting", title: "Brow Tinting", price: "$40" },
-    { id: "lamination", title: "Brow Lamination", price: "$50" },
-    { id: "combo-st", title: "Shaping + Tinting", price: "$65" },
-    { id: "combo-sl", title: "Shaping + Lamination", price: "$75" },
-    { id: "combo-lt", title: "Lamination + Tinting", price: "$85" },
-    { id: "full", title: "Full Combo (Shape+Lam+Tint)", price: "$110" },
-  ];
+  // Brows
+  { id: "brow-lam-tint-tweeze", title: "Brow lamination + tint + tweeze", price: "$100", duration: "1 h", category: "Brows" },
+  { id: "brow-lam-tweeze", title: "Brow lamination + tweeze", price: "$85", duration: "30 min", category: "Brows" },
+  { id: "brow-tint", title: "Brow tint", price: "$40", duration: "25 min", category: "Brows" },
+  { id: "wax-brows", title: "Wax brows", price: "$25", duration: "15 min", category: "Brows" },
+  { id: "wax-tint", title: "Wax + tint", price: "$50", duration: "40 min", category: "Brows" },
+  { id: "lip-wax", title: "Lip wax", price: "$10", duration: "7 min", category: "Brows" },
+
+  // Lashes
+  { id: "lash-lift", title: "Lash lift (tint included)", price: "$100", duration: "1 h 30 min", category: "Lashes" },
+  { id: "lash-tint", title: "Lash tint", price: "$35", duration: "15 min", category: "Lashes" },
+  { id: "brow-lam-lash-lift", title: "Brow lamination + Lash lift", price: "$190", duration: "2 h", category: "Lashes" },
+
+  // Make up
+  { id: "makeup-nude", title: "Nude makeup + lashes", price: "$90", duration: "1 h", category: "Make up" },
+  { id: "makeup-day", title: "Day makeup + lashes", price: "$100", duration: "1 h", category: "Make up" },
+  { id: "makeup-evening", title: "Evening makeup + lashes", price: "$120", duration: "1 h 15 min", category: "Make up" },
+];
   const openPricesModal = () => setShowPrices(true);
   const closePricesModal = () => setShowPrices(false);
 
