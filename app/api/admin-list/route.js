@@ -8,8 +8,48 @@ const noCache = {
   Vary: "x-admin-key",
 };
 
+const STEP = 15; // хв
+
 function isDateStr(s) {
   return /^\d{4}-\d{2}-\d{2}$/.test(s);
+}
+function parseTime(t) {
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + m;
+}
+function minutesToTime(min) {
+  const h = Math.floor(min / 60), m = min % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+/** генерує усі 15-хв точки інтервалу від часу start на duration хв (включно зі стартом) */
+function spanTimes(startStr, durationMin, step = STEP) {
+  const start = parseTime(startStr);
+  const end = start + Math.max(0, Number(durationMin) || 0);
+  const out = [];
+  out.push(startStr);
+  for (let t = Math.ceil(start / step) * step; t < end; t += step) {
+    out.push(minutesToTime(t));
+  }
+  return out;
+}
+/** з масиву точок виду ["09:00","09:15",...] робить консолідовані інтервали */
+function consolidateBlocked(points, step = STEP) {
+  const arr = Array.from(new Set(points)).sort((a, b) => parseTime(a) - parseTime(b));
+  const blocks = [];
+  let i = 0;
+  while (i < arr.length) {
+    const startStr = arr[i];
+    let count = 1;
+    let prev = parseTime(startStr);
+    i++;
+    while (i < arr.length && parseTime(arr[i]) - prev === step) {
+      count++;
+      prev = parseTime(arr[i]);
+      i++;
+    }
+    blocks.push({ time: startStr, durationMin: count * step });
+  }
+  return blocks;
 }
 
 export async function GET(req) {
@@ -48,6 +88,7 @@ export async function GET(req) {
         const raw = await store.get(key, { type: "json" });
         const day = raw || { blocked: [], bookings: [] };
 
+        // 1) звичайні бронювання
         for (const b of day.bookings || []) {
           rows.push({
             date: key,
@@ -56,10 +97,32 @@ export async function GET(req) {
             phone: b.phone || "",
             paid: !!b.paid,
             paymentId: b.paymentId || "",
-            // НОВЕ: показуємо процедуру та тривалість
             serviceTitle: b.serviceTitle || "",
             price: b.price || "",
             durationMin: Number.isFinite(b?.durationMin) ? b.durationMin : 45,
+            isBlock: false,
+          });
+        }
+
+        // 2) чисті адмін-блоки = blocked - сумарні інтервали бронювань
+        const blockedSet = new Set(day.blocked || []);
+        for (const b of day.bookings || []) {
+          const pts = spanTimes(b.time, b?.durationMin ?? 45);
+          pts.forEach((t) => blockedSet.delete(t));
+        }
+        const blocks = consolidateBlocked(Array.from(blockedSet));
+        for (const blk of blocks) {
+          rows.push({
+            date: key,
+            time: blk.time,
+            name: "",         // не клієнт
+            phone: "",
+            paid: false,
+            paymentId: "",
+            serviceTitle: "", // залишимо порожнім — статус покаже "blocked"
+            price: "",
+            durationMin: blk.durationMin,
+            isBlock: true,
           });
         }
       }

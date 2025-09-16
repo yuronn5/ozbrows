@@ -10,11 +10,10 @@ type Row = {
   phone?: string;
   paid?: boolean;
   paymentId?: string | null;
-
-  // NEW (вже приходить із /api/admin-list)
   serviceTitle?: string;
   price?: string;
   durationMin?: number;
+  isBlock?: boolean; // ← НОВЕ
 };
 
 const API_BASE = "/api";
@@ -72,7 +71,9 @@ export default function AdminPage() {
       const inTime = r.time.toLowerCase().includes(term);
       const inService = (r.serviceTitle || "").toLowerCase().includes(term);
       const inDuration =
-        String(r.durationMin ?? "").toLowerCase().includes(term) ||
+        String(r.durationMin ?? "")
+          .toLowerCase()
+          .includes(term) ||
         fmtDuration(r.durationMin).toLowerCase().includes(term);
       return inName || inPhone || inDate || inTime || inService || inDuration;
     });
@@ -182,17 +183,12 @@ export default function AdminPage() {
       return;
     }
     try {
-      await api<{ ok: true }>(
-        "/book",
-        {},
-        "POST",
-        {
-          action: "admin-block",
-          date: blockDate,
-          time: blockTime,
-          durationMin: Math.max(5, Math.min(8 * 60, Number(blockDur))),
-        }
-      );
+      await api<{ ok: true }>("/book", {}, "POST", {
+        action: "admin-block",
+        date: blockDate,
+        time: blockTime,
+        durationMin: Math.max(5, Math.min(8 * 60, Number(blockDur))),
+      });
       alert(`Blocked ${blockTime} for ${blockDur}m on ${blockDate}`);
     } catch (e) {
       alert(e instanceof Error ? e.message : "Failed to block interval");
@@ -204,7 +200,10 @@ export default function AdminPage() {
     if (!blockDate) return;
     if (!confirm(`Block the whole day ${blockDate}?`)) return;
     try {
-      await api<{ ok: true }>("/book", {}, "POST", { action: "block-day", date: blockDate });
+      await api<{ ok: true }>("/book", {}, "POST", {
+        action: "block-day",
+        date: blockDate,
+      });
       alert(`Day ${blockDate} blocked`);
     } catch (e) {
       alert(e instanceof Error ? e.message : "Failed to block day");
@@ -216,7 +215,10 @@ export default function AdminPage() {
     if (!blockDate) return;
     if (!confirm(`Unblock the whole day ${blockDate}?`)) return;
     try {
-      await api<{ ok: true }>("/book", {}, "POST", { action: "unblock-day", date: blockDate });
+      await api<{ ok: true }>("/book", {}, "POST", {
+        action: "unblock-day",
+        date: blockDate,
+      });
       alert(`Day ${blockDate} unblocked`);
     } catch (e) {
       alert(e instanceof Error ? e.message : "Failed to unblock day");
@@ -238,7 +240,7 @@ export default function AdminPage() {
     ];
     const lines = [header.join(",")];
     filtered.forEach((r) => {
-      const status = r.paid ? "paid" : "booked";
+      const status = r.isBlock ? "blocked" : r.paid ? "paid" : "booked";
       const vals = [
         r.date,
         r.time,
@@ -307,7 +309,10 @@ export default function AdminPage() {
         </div>
 
         {/* Admin blocks panel */}
-        <div className="toolbar" style={{ marginTop: 12, gap: 12, alignItems: "center" }}>
+        <div
+          className="toolbar"
+          style={{ marginTop: 12, gap: 12, alignItems: "center" }}
+        >
           <strong>Admin blocks</strong>
           <label>
             Date{" "}
@@ -376,7 +381,9 @@ export default function AdminPage() {
                     {r.serviceTitle ? (
                       <>
                         {r.serviceTitle}{" "}
-                        {r.price ? <span className="muted">• {r.price}</span> : null}
+                        {r.price ? (
+                          <span className="muted">• {r.price}</span>
+                        ) : null}
                       </>
                     ) : (
                       <span className="muted">—</span>
@@ -395,8 +402,12 @@ export default function AdminPage() {
                     }}
                   />
                   <td>
-                    <span className={`pill ${r.paid ? "paid" : ""}`}>
-                      {r.paid ? "paid" : "booked"}
+                    <span
+                      className={`pill ${
+                        r.isBlock ? "blocked" : r.paid ? "paid" : ""
+                      }`}
+                    >
+                      {r.isBlock ? "blocked" : r.paid ? "paid" : "booked"}
                     </span>
                   </td>
                   <td
@@ -408,12 +419,16 @@ export default function AdminPage() {
                     }}
                   />
                   <td style={{ textAlign: "right" }}>
-                    <button
-                      className="danger"
-                      onClick={() => cancel(r.date, r.time)}
-                    >
-                      Cancel
-                    </button>
+                    {r.isBlock ? (
+                      <span className="muted">—</span> // блоки відміняти тут не даємо
+                    ) : (
+                      <button
+                        className="danger"
+                        onClick={() => cancel(r.date, r.time)}
+                      >
+                        Cancel
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))

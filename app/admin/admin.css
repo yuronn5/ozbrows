@@ -137,3 +137,8 @@ button.danger{ background:var(--danger); color:#fff; border-color:transparent; }
     border-top-width: 0; /* якщо у тебе є розділювачі — зменшить густоту */
   }
 }
+.pill.blocked {
+  background: #ffe8e8;
+  color: #b42318;
+  border-color: transparent;
+}
