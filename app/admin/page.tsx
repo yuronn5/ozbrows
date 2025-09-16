@@ -10,6 +10,11 @@ type Row = {
   phone?: string;
   paid?: boolean;
   paymentId?: string | null;
+
+  // NEW:
+  serviceTitle?: string;
+  price?: string;
+  durationMin?: number;
 };
 
 const API_BASE = "/api";
@@ -25,6 +30,13 @@ function escapeHtml(str: string) {
         s
       ]!)
   );
+}
+function fmtDuration(min?: number) {
+  const m = Number(min ?? 0);
+  if (!Number.isFinite(m) || m <= 0) return "—";
+  const h = Math.floor(m / 60);
+  const mm = m % 60;
+  return h ? `${h}h${mm ? ` ${mm}m` : ""}` : `${mm}m`;
 }
 
 export default function AdminPage() {
@@ -48,13 +60,17 @@ export default function AdminPage() {
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
     if (!term) return rows;
-    return rows.filter(
-      (r) =>
-        (r.name || "").toLowerCase().includes(term) ||
-        (r.phone || "").toLowerCase().includes(term) ||
-        r.date.toLowerCase().includes(term) ||
-        r.time.toLowerCase().includes(term)
-    );
+    return rows.filter((r) => {
+      const inName = (r.name || "").toLowerCase().includes(term);
+      const inPhone = (r.phone || "").toLowerCase().includes(term);
+      const inDate = r.date.toLowerCase().includes(term);
+      const inTime = r.time.toLowerCase().includes(term);
+      const inService = (r.serviceTitle || "").toLowerCase().includes(term);
+      const inDuration =
+        String(r.durationMin ?? "").toLowerCase().includes(term) ||
+        fmtDuration(r.durationMin).toLowerCase().includes(term);
+      return inName || inPhone || inDate || inTime || inService || inDuration;
+    });
   }, [rows, q]);
 
   async function ensureAdminKey(): Promise<string> {
@@ -84,7 +100,7 @@ export default function AdminPage() {
       let url = `${API_BASE}${path}`;
       if (method === "GET" && params && Object.keys(params).length) {
         const u = new URL(url, location.origin);
-        Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v));
+        Object.entries(params).forEach(([kk, v]) => u.searchParams.set(kk, v));
         u.searchParams.set("_", String(Date.now()));
         url = u.toString();
       }
@@ -96,10 +112,8 @@ export default function AdminPage() {
       });
     };
 
-    // перша спроба
     let res = await doFetch(key);
     if (res.status === 401) {
-      // очищаємо і даємо шанс ще раз
       sessionStorage.removeItem("ADMIN_KEY");
       key = await ensureAdminKey();
       res = await doFetch(key);
@@ -153,13 +167,26 @@ export default function AdminPage() {
   }
 
   function downloadCsv() {
-    const header = ["date", "time", "name", "phone", "status", "paymentId"];
+    const header = [
+      "date",
+      "time",
+      "serviceTitle",
+      "durationMin",
+      "price",
+      "name",
+      "phone",
+      "status",
+      "paymentId",
+    ];
     const lines = [header.join(",")];
     filtered.forEach((r) => {
       const status = r.paid ? "paid" : "booked";
       const vals = [
         r.date,
         r.time,
+        r.serviceTitle || "",
+        String(r.durationMin ?? ""),
+        r.price || "",
         r.name || "",
         r.phone || "",
         status,
@@ -212,7 +239,7 @@ export default function AdminPage() {
           <div className="right">
             <input
               className="search"
-              placeholder="Search name/phone/date/time"
+              placeholder="Search name/phone/date/time/service"
               value={q}
               onChange={(e) => setQ(e.target.value)}
             />
@@ -226,6 +253,8 @@ export default function AdminPage() {
             <tr>
               <th>Date</th>
               <th>Time</th>
+              <th>Service</th>
+              <th>Duration</th>
               <th className="hide-sm">Client</th>
               <th>Phone</th>
               <th>Status</th>
@@ -236,15 +265,26 @@ export default function AdminPage() {
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={7} className="empty">
+                <td colSpan={9} className="empty">
                   No data yet. Choose dates and click <b>Load</b>.
                 </td>
               </tr>
             ) : (
               filtered.map((r) => (
-                <tr key={`${r.date}-${r.time}-${r.name}`}>
+                <tr key={`${r.date}-${r.time}-${r.name}-${r.phone}`}>
                   <td>{r.date}</td>
                   <td>{r.time}</td>
+                  <td>
+                    {r.serviceTitle ? (
+                      <>
+                        {r.serviceTitle}{" "}
+                        {r.price ? <span className="muted">• {r.price}</span> : null}
+                      </>
+                    ) : (
+                      <span className="muted">—</span>
+                    )}
+                  </td>
+                  <td>{fmtDuration(r.durationMin)}</td>
                   <td
                     className="hide-sm"
                     dangerouslySetInnerHTML={{
