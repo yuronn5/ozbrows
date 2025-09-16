@@ -1,7 +1,6 @@
 // app/api/availability/route.ts
 import { NextResponse } from "next/server";
 import { getStore } from "@netlify/blobs";
-import "../globals.css";
 
 type Booking = {
   time: string;

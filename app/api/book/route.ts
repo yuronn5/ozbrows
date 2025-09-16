@@ -2,7 +2,6 @@
 import { NextResponse } from "next/server";
 import { getStore } from "@netlify/blobs";
 import { notifyTelegram } from "../../../lib/notify";
-import "../globals.css";
 
 type Booking = {
   time: string;
