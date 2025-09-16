@@ -9,7 +9,7 @@ type Booking = {
   phone?: string;
   paid?: boolean;
   paymentId?: string | null;
-  /** додано: тривалість бронювання у хвилинах */
+  /** тривалість бронювання у хвилинах */
   durationMin?: number;
   /** опційно: назва послуги / ціна */
   serviceTitle?: string;
@@ -17,7 +17,7 @@ type Booking = {
 };
 
 type DayData = {
-  blocked: string[];
+  blocked: string[];   // масив 15-хв «точок» (наприклад: "09:00","09:15",...)
   bookings: Booking[];
 };
 
@@ -39,11 +39,10 @@ function parseTime(t: string): number {
   return h * 60 + m;
 }
 function toTime(min: number): string {
-  const h = Math.floor(min / 60),
-    m = min % 60;
+  const h = Math.floor(min / 60), m = min % 60;
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
-/** Повертає усі 15-хв точки в діапазоні тривалості від старту */
+/** Повертає усі 15-хв «точки» в діапазоні тривалості від старту */
 function rangeTimes(
   startStr: string,
   dur = SERVICE_DURATION,
@@ -58,6 +57,17 @@ function rangeTimes(
   }
   return out;
 }
+/** Безперервна довжина блокування від старту (в хв), за 15-хв кроками */
+function inferBlockedDuration(blocked: string[] = [], startStr: string, step = SLOT_MINUTES) {
+  const set = new Set(blocked);
+  let dur = 0;
+  let t = parseTime(startStr);
+  while (set.has(toTime(t))) {
+    dur += step;
+    t += step;
+  }
+  return dur; // 0 якщо послідовність не знайдена
+}
 /** Чи старт у робочих годинах з урахуванням тривалості */
 function isStartWithinWorkingHours(
   startStr: string,
@@ -66,7 +76,6 @@ function isStartWithinWorkingHours(
   const start = parseTime(startStr);
   const dayStart = WORK_START * 60;
   const dayEnd = WORK_END * 60;
-  // старт не раніше відкриття і не так пізно, щоб виходити за межу закриття
   return start >= dayStart && start + durationMin <= dayEnd;
 }
 
@@ -77,8 +86,8 @@ export async function POST(req: Request) {
       time?: string;
       name?: string;
       phone?: string;
-      action?: string;
-      /** нові поля від клієнта */
+      action?: "admin-block" | "block-day" | "unblock-day" | "admin-unblock";
+      /** нові поля від клієнта / адміна */
       durationMin?: number;
       serviceTitle?: string;
       price?: string;
@@ -94,13 +103,8 @@ export async function POST(req: Request) {
 
     const store = getStore({ name: "bookings" });
     const raw = await store.get(date, { type: "json" as const });
-    const day: DayData = (raw as DayData | null) ?? {
-      blocked: [],
-      bookings: [],
-    };
-    const setDay = async (obj: DayData) => {
-      await store.set(date, JSON.stringify(obj));
-    };
+    const day: DayData = (raw as DayData | null) ?? { blocked: [], bookings: [] };
+    const setDay = async (obj: DayData) => { await store.set(date, JSON.stringify(obj)); };
 
     const adminKey = (req.headers.get("x-admin-key") || "").trim();
     const isAdmin = !!adminKey && adminKey === process.env.ADMIN_KEY;
@@ -112,20 +116,17 @@ export async function POST(req: Request) {
       const all: string[] = [];
       for (let h = WORK_START; h < WORK_END; h++) {
         for (let m = 0; m < 60; m += SLOT_MINUTES) {
-          all.push(
-            `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`
-          );
+          all.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
         }
       }
-      day.blocked = Array.from(
-        new Set([...(day.blocked ?? []), ...all])
-      ).sort();
+      day.blocked = Array.from(new Set([...(day.blocked ?? []), ...all])).sort();
       await setDay(day);
       await notifyTelegram(`⛔️ Day blocked by admin\nDate: ${date}`);
       return NextResponse.json({ ok: true }, { status: 200, headers: noCache });
     }
 
     if (action === "unblock-day" && isAdmin) {
+      // УВАГА: це чистить і блоки, і бронювання на день
       day.blocked = [];
       day.bookings = [];
       await setDay(day);
@@ -141,13 +142,10 @@ export async function POST(req: Request) {
       );
     }
 
-    // читаємо тривалість із тіла запиту (з дефолтом і межами)
-    const durationMin = Math.max(
-      5,
-      Math.min(8 * 60, Number(body?.durationMin ?? SERVICE_DURATION))
-    );
+    // читаємо/кліпаємо тривалість (за замовчуванням SERVICE_DURATION)
+    const durationMin = Math.max(5, Math.min(8 * 60, Number(body?.durationMin ?? SERVICE_DURATION)));
 
-    // ❗ Перевірка робочих годин з урахуванням тривалості послуги
+    // ❗ Перевірка робочих годин з урахуванням тривалості
     if (!isStartWithinWorkingHours(time, durationMin)) {
       return NextResponse.json(
         { error: "outside working hours" },
@@ -155,7 +153,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // check conflicts (існуючі бронювання можуть мати власну тривалість)
+    // перевірка конфліктів (існуючі бронювання мають власну тривалість)
     const span = rangeTimes(time, durationMin);
     const occupied = new Set<string>([
       ...(day.blocked ?? []),
@@ -164,23 +162,39 @@ export async function POST(req: Request) {
       ),
     ]);
     const conflict = span.some((t) => occupied.has(t));
-    if (conflict) {
-      return NextResponse.json(
-        { error: "conflict" },
-        { status: 409, headers: noCache }
-      );
-    }
 
     // ==== ADMIN: block range ====
     if (isAdmin && action === "admin-block") {
-      day.blocked = Array.from(
-        new Set([...(day.blocked ?? []), ...span])
-      ).sort();
+      if (conflict) {
+        return NextResponse.json({ error: "conflict" }, { status: 409, headers: noCache });
+      }
+      day.blocked = Array.from(new Set([...(day.blocked ?? []), ...span])).sort();
       await setDay(day);
       await notifyTelegram(
         `⛔️ Interval blocked by admin\nDate: ${date}\nStart: ${time} (${durationMin} minutes)`
       );
       return NextResponse.json({ ok: true }, { status: 200, headers: noCache });
+    }
+
+    // ==== ADMIN: unblock range ====
+    if (isAdmin && action === "admin-unblock") {
+      // беремо durationMin з тіла або обчислюємо довжину безперервного блокування від старту
+      const durFromBody = Number(body?.durationMin) || 0;
+      const inferred = inferBlockedDuration(day.blocked ?? [], time);
+      const effectiveDur = Math.max(SLOT_MINUTES, durFromBody || inferred || SLOT_MINUTES);
+
+      const spanToRemove = rangeTimes(time, effectiveDur);
+      day.blocked = (day.blocked ?? []).filter((t) => !spanToRemove.includes(t));
+      await setDay(day);
+      await notifyTelegram(
+        `✅ Interval unblocked by admin\nDate: ${date}\nStart: ${time} (${effectiveDur} minutes)`
+      );
+      return NextResponse.json({ ok: true }, { status: 200, headers: noCache });
+    }
+
+    // якщо це не адмін-операція — далі тільки клієнтське бронювання
+    if (conflict) {
+      return NextResponse.json({ error: "conflict" }, { status: 409, headers: noCache });
     }
 
     // ==== CLIENT booking ====
@@ -206,6 +220,7 @@ export async function POST(req: Request) {
         price: body?.price,
       },
     ];
+    // блокуємо відповідний інтервал, щоб уникати колізій
     day.blocked = Array.from(new Set([...(day.blocked ?? []), ...span])).sort();
     await setDay(day);
 
