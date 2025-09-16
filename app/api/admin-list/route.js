@@ -47,6 +47,7 @@ export async function GET(req) {
 
         const raw = await store.get(key, { type: "json" });
         const day = raw || { blocked: [], bookings: [] };
+
         for (const b of day.bookings || []) {
           rows.push({
             date: key,
@@ -55,6 +56,10 @@ export async function GET(req) {
             phone: b.phone || "",
             paid: !!b.paid,
             paymentId: b.paymentId || "",
+            // НОВЕ: показуємо процедуру та тривалість
+            serviceTitle: b.serviceTitle || "",
+            price: b.price || "",
+            durationMin: Number.isFinite(b?.durationMin) ? b.durationMin : 45,
           });
         }
       }

@@ -22,6 +22,7 @@ function toTime(min) {
     m = min % 60;
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
+/** усі 15-хв точки у проміжку від старту з урахуванням тривалості */
 function rangeTimes(startStr, dur = SERVICE_DURATION, step = SLOT_MINUTES) {
   const start = parseTime(startStr);
   const end = Math.min(start + dur, WORK_END * 60);
@@ -31,6 +32,13 @@ function rangeTimes(startStr, dur = SERVICE_DURATION, step = SLOT_MINUTES) {
     if (t >= WORK_START * 60 && t < WORK_END * 60) out.push(toTime(t));
   }
   return out;
+}
+
+function fmtDuration(min) {
+  const m = Math.max(0, Number(min) || 0);
+  const h = Math.floor(m / 60);
+  const mm = m % 60;
+  return h ? `${h}h${mm ? ` ${mm}m` : ""}` : `${mm}m`;
 }
 
 async function notifyTelegram(text) {
@@ -74,6 +82,7 @@ export async function POST(req) {
       bookings: [],
     };
 
+    // шукаємо бронювання на цей час
     const idx = (day.bookings || []).findIndex((b) => b.time === time);
     if (idx === -1) {
       return NextResponse.json(
@@ -81,17 +90,25 @@ export async function POST(req) {
         { status: 404, headers: noCache }
       );
     }
+
+    // видаляємо бронювання
     const removed = day.bookings.splice(idx, 1)[0];
 
-    const span = rangeTimes(time);
+    // РОЗБЛОКУВАННЯ: використовуємо фактичну тривалість бронювання
+    const span = rangeTimes(time, removed?.durationMin ?? SERVICE_DURATION);
     day.blocked = (day.blocked || []).filter((t) => !span.includes(t));
 
     await store.set(date, JSON.stringify(day));
 
+    // сповіщення з деталями послуги і тривалістю
     await notifyTelegram(
-      `❌ BOOKING CANCELED by admin\nDate: ${date}\nTime: ${time}\nName: ${
-        removed?.name || ""
-      }\nPhone: ${removed?.phone || ""}`
+      `❌ BOOKING CANCELED by admin` +
+        `\nDate: ${date}` +
+        `\nTime: ${time} (${fmtDuration(removed?.durationMin ?? SERVICE_DURATION)})` +
+        (removed?.serviceTitle ? `\nService: ${removed.serviceTitle}` : "") +
+        (removed?.price ? `\nPrice: ${removed.price}` : "") +
+        `\nName: ${removed?.name || ""}` +
+        `\nPhone: ${removed?.phone || ""}`
     );
 
     return NextResponse.json({ ok: true }, { status: 200, headers: noCache });
