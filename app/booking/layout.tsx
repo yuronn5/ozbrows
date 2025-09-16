@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./booking.css";
-import "../globals.css";
+
 
 export const metadata: Metadata = {
   title: "Календар запису",

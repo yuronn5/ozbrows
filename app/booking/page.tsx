@@ -5,7 +5,7 @@ import { Calendar } from "@fullcalendar/core";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin, { DateClickArg } from "@fullcalendar/interaction";
 import "./booking.css";
-import "../globals.css";
+
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -325,7 +325,7 @@ export default function BookingPage() {
   return (
     <main className="container" style={{ padding: "28px 0 40px" }}>
       <div className="booking__header">
-        <button onClick={() => router.replace("/")}  className="back-home-btn">
+        <button type="button" className="back-home-btn" onClick={() => window.location.replace("/")}>
           <span className="icon">
             <ChevronLeft size={20} />
           </span>

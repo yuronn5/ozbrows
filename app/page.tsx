@@ -4,7 +4,7 @@ import Link from "next/link";
 import Nav from "./components/Nav";
 import Gallery from "./components/Gallery";
 import { createPortal } from "react-dom";
-import "./globals.css";
+
 import { useRouter } from "next/navigation";
 import PricesModal, { Service } from "./components/PricesModal";
 
