@@ -89,7 +89,9 @@ type BookPayload = {
   time: string;
   name: string;
   phone: string;
-  durationMin?: number; // ← важливо: реальна тривалість
+  durationMin?: number;
+  serviceTitle?: string;
+  price?: string;
 };
 type ApiOk = { ok: true };
 type ApiErr = { error: string };
@@ -253,8 +255,7 @@ export default function BookingPage() {
   const isBlocked = (t: string) => blocked.includes(t);
   const fitsFrom = (t: string) =>
     !rangeTimes(t, durationNow).some((s) => blocked.includes(s));
-  const overflows = (t: string) =>
-    parseTime(t) + durationNow > WORK_END * 60;
+  const overflows = (t: string) => parseTime(t) + durationNow > WORK_END * 60;
 
   async function handleConfirm() {
     if (!dateStr || !selected) {
@@ -274,6 +275,8 @@ export default function BookingPage() {
         name,
         phone,
         durationMin: durationNow,
+        serviceTitle: selectedService?.title, // ← ВАЖЛИВО
+        price: selectedService?.price, // ← ВАЖЛИВО
       });
       const day = await loadDay(dateStr);
       const autoBlocked = Array.from(
@@ -325,7 +328,11 @@ export default function BookingPage() {
   return (
     <main className="container" style={{ padding: "28px 0 40px" }}>
       <div className="booking__header">
-        <button type="button" className="back-home-btn" onClick={() => window.location.replace("/")}>
+        <button
+          type="button"
+          className="back-home-btn"
+          onClick={() => window.location.replace("/")}
+        >
           <span className="icon">
             <ChevronLeft size={20} />
           </span>
@@ -340,7 +347,10 @@ export default function BookingPage() {
       </div>
 
       <div className="booking__wrap">
-        <div className="booking__card" aria-label="Calendar for choosing a date">
+        <div
+          className="booking__card"
+          aria-label="Calendar for choosing a date"
+        >
           <div ref={calRef} />
         </div>
       </div>
@@ -363,7 +373,8 @@ export default function BookingPage() {
                 <h3 className="sheet__title">Choose a time</h3>
                 <div className="sheet__sub">
                   {prettyDate}
-                  <span className="dot">•</span> Working hours: <b>08:00–20:00</b>
+                  <span className="dot">•</span> Working hours:{" "}
+                  <b>08:00–20:00</b>
                   <span className="dot">•</span> <b>{durationNow}m</b>
                 </div>
               </div>
@@ -377,8 +388,7 @@ export default function BookingPage() {
                 aria-label="Available times"
               >
                 {slots.map((t) => {
-                  const disabled =
-                    isBlocked(t) || !fitsFrom(t) || overflows(t);
+                  const disabled = isBlocked(t) || !fitsFrom(t) || overflows(t);
                   const selectedNow = selected === t;
                   return (
                     <button
