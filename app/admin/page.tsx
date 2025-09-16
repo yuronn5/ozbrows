@@ -13,11 +13,12 @@ type Row = {
   serviceTitle?: string;
   price?: string;
   durationMin?: number;
-  isBlock?: boolean; // ← НОВЕ
+  isBlock?: boolean; // для рядків-блоків
 };
 
 const API_BASE = "/api";
 
+/* ---------- utils ---------- */
 function toISO(d: Date) {
   return d.toISOString().slice(0, 10);
 }
@@ -48,18 +49,15 @@ export default function AdminPage() {
   const [q, setQ] = useState("");
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(false);
-  const [adminKey, setAdminKey] = useState<string | null>(() =>
-    typeof window === "undefined" ? null : sessionStorage.getItem("ADMIN_KEY")
-  );
 
-  // Admin Blocks state
+  // Admin blocks quick panel
   const [blockDate, setBlockDate] = useState<string>(() => toISO(new Date()));
   const [blockTime, setBlockTime] = useState<string>("08:00");
   const [blockDur, setBlockDur] = useState<number>(45);
 
   useEffect(() => {
-    if (adminKey) sessionStorage.setItem("ADMIN_KEY", adminKey);
-  }, [adminKey]);
+    // no-op: сторінка клієнтська — усе ок
+  }, []);
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
@@ -71,14 +69,13 @@ export default function AdminPage() {
       const inTime = r.time.toLowerCase().includes(term);
       const inService = (r.serviceTitle || "").toLowerCase().includes(term);
       const inDuration =
-        String(r.durationMin ?? "")
-          .toLowerCase()
-          .includes(term) ||
+        String(r.durationMin ?? "").toLowerCase().includes(term) ||
         fmtDuration(r.durationMin).toLowerCase().includes(term);
       return inName || inPhone || inDate || inTime || inService || inDuration;
     });
   }, [rows, q]);
 
+  /* ---------- admin key + api ---------- */
   async function ensureAdminKey(): Promise<string> {
     let key =
       typeof window !== "undefined"
@@ -125,12 +122,21 @@ export default function AdminPage() {
       res = await doFetch(key);
     }
 
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok)
-      throw new Error((json as { error?: string })?.error || "API error");
+    const json: unknown = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      let msg = "API error";
+      if (typeof json === "object" && json !== null && "error" in json) {
+        const val = (json as Record<string, unknown>).error;
+        if (typeof val === "string" && val.trim()) msg = val;
+      }
+      throw new Error(msg);
+    }
+
     return json as T;
   }
 
+  /* ---------- actions ---------- */
   async function load() {
     try {
       setLoading(true);
@@ -155,47 +161,64 @@ export default function AdminPage() {
   }
 
   async function cancel(date: string, time: string) {
-    if (
-      !confirm(
-        `Cancel booking on ${date} at ${time}? This will free the time slot.`
-      )
-    )
-      return;
+    if (!confirm(`Cancel booking on ${date} at ${time}?`)) return;
     try {
       await api<{ ok: true }>("/admin-cancel", {}, "POST", { date, time });
       setRows((prev) =>
-        prev.filter((r) => !(r.date === date && r.time === time))
+        prev.filter((r) => !(r.date === date && r.time === time && !r.isBlock))
       );
-    } catch (e: unknown) {
+    } catch (e) {
       alert(e instanceof Error ? e.message : "Cancel failed");
       console.error(e);
     }
   }
 
-  // ===== Admin Blocks =====
+  async function unblock(date: string, time: string, durationMin?: number) {
+    if (!confirm(`Unblock ${date} from ${time} (${fmtDuration(durationMin)})?`))
+      return;
+    try {
+      await api<{ ok: true }>("/book", {}, "POST", {
+        action: "admin-unblock",
+        date,
+        time,
+        durationMin, // бек уміє і сам визначити, але краще передати
+      });
+      setRows((prev) =>
+        prev.filter((r) => !(r.isBlock && r.date === date && r.time === time))
+      );
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Unblock failed");
+      console.error(e);
+    }
+  }
+
+  // admin blocks quick panel
   function validTimeStr(s: string) {
     return /^\d{2}:\d{2}$/.test(s);
   }
-
   async function blockInterval() {
     if (!blockDate || !validTimeStr(blockTime) || !Number.isFinite(blockDur)) {
       alert("Set date, HH:MM time and duration (minutes).");
       return;
     }
     try {
-      await api<{ ok: true }>("/book", {}, "POST", {
-        action: "admin-block",
-        date: blockDate,
-        time: blockTime,
-        durationMin: Math.max(5, Math.min(8 * 60, Number(blockDur))),
-      });
+      await api<{ ok: true }>(
+        "/book",
+        {},
+        "POST",
+        {
+          action: "admin-block",
+          date: blockDate,
+          time: blockTime,
+          durationMin: Math.max(5, Math.min(8 * 60, Number(blockDur))),
+        }
+      );
       alert(`Blocked ${blockTime} for ${blockDur}m on ${blockDate}`);
     } catch (e) {
       alert(e instanceof Error ? e.message : "Failed to block interval");
       console.error(e);
     }
   }
-
   async function blockWholeDay() {
     if (!blockDate) return;
     if (!confirm(`Block the whole day ${blockDate}?`)) return;
@@ -210,7 +233,6 @@ export default function AdminPage() {
       console.error(e);
     }
   }
-
   async function unblockWholeDay() {
     if (!blockDate) return;
     if (!confirm(`Unblock the whole day ${blockDate}?`)) return;
@@ -266,10 +288,10 @@ export default function AdminPage() {
 
   function logout() {
     sessionStorage.removeItem("ADMIN_KEY");
-    setAdminKey(null);
     alert("PIN cleared. Reload page and enter again.");
   }
 
+  /* ---------- UI ---------- */
   return (
     <div className="wrap">
       <div className="card">
@@ -328,7 +350,7 @@ export default function AdminPage() {
               type="time"
               value={blockTime}
               onChange={(e) => setBlockTime(e.target.value)}
-              step={900} // 15m
+              step={900}
             />
           </label>
           <label>
@@ -374,7 +396,11 @@ export default function AdminPage() {
               </tr>
             ) : (
               filtered.map((r) => (
-                <tr key={`${r.date}-${r.time}-${r.name}-${r.phone}`}>
+                <tr
+                  key={`${r.date}-${r.time}-${r.name}-${r.phone}-${
+                    r.isBlock ? "blk" : "bk"
+                  }`}
+                >
                   <td>{r.date}</td>
                   <td>{r.time}</td>
                   <td>
@@ -420,7 +446,13 @@ export default function AdminPage() {
                   />
                   <td style={{ textAlign: "right" }}>
                     {r.isBlock ? (
-                      <span className="muted">—</span> // блоки відміняти тут не даємо
+                      <button
+                        onClick={() =>
+                          unblock(r.date, r.time, r.durationMin || undefined)
+                        }
+                      >
+                        Unblock
+                      </button>
                     ) : (
                       <button
                         className="danger"
