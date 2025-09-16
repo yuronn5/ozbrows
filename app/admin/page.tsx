@@ -11,7 +11,7 @@ type Row = {
   paid?: boolean;
   paymentId?: string | null;
 
-  // NEW:
+  // NEW (вже приходить із /api/admin-list)
   serviceTitle?: string;
   price?: string;
   durationMin?: number;
@@ -52,6 +52,11 @@ export default function AdminPage() {
   const [adminKey, setAdminKey] = useState<string | null>(() =>
     typeof window === "undefined" ? null : sessionStorage.getItem("ADMIN_KEY")
   );
+
+  // Admin Blocks state
+  const [blockDate, setBlockDate] = useState<string>(() => toISO(new Date()));
+  const [blockTime, setBlockTime] = useState<string>("08:00");
+  const [blockDur, setBlockDur] = useState<number>(45);
 
   useEffect(() => {
     if (adminKey) sessionStorage.setItem("ADMIN_KEY", adminKey);
@@ -166,6 +171,59 @@ export default function AdminPage() {
     }
   }
 
+  // ===== Admin Blocks =====
+  function validTimeStr(s: string) {
+    return /^\d{2}:\d{2}$/.test(s);
+  }
+
+  async function blockInterval() {
+    if (!blockDate || !validTimeStr(blockTime) || !Number.isFinite(blockDur)) {
+      alert("Set date, HH:MM time and duration (minutes).");
+      return;
+    }
+    try {
+      await api<{ ok: true }>(
+        "/book",
+        {},
+        "POST",
+        {
+          action: "admin-block",
+          date: blockDate,
+          time: blockTime,
+          durationMin: Math.max(5, Math.min(8 * 60, Number(blockDur))),
+        }
+      );
+      alert(`Blocked ${blockTime} for ${blockDur}m on ${blockDate}`);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to block interval");
+      console.error(e);
+    }
+  }
+
+  async function blockWholeDay() {
+    if (!blockDate) return;
+    if (!confirm(`Block the whole day ${blockDate}?`)) return;
+    try {
+      await api<{ ok: true }>("/book", {}, "POST", { action: "block-day", date: blockDate });
+      alert(`Day ${blockDate} blocked`);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to block day");
+      console.error(e);
+    }
+  }
+
+  async function unblockWholeDay() {
+    if (!blockDate) return;
+    if (!confirm(`Unblock the whole day ${blockDate}?`)) return;
+    try {
+      await api<{ ok: true }>("/book", {}, "POST", { action: "unblock-day", date: blockDate });
+      alert(`Day ${blockDate} unblocked`);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to unblock day");
+      console.error(e);
+    }
+  }
+
   function downloadCsv() {
     const header = [
       "date",
@@ -248,7 +306,47 @@ export default function AdminPage() {
           </div>
         </div>
 
-        <table className="table">
+        {/* Admin blocks panel */}
+        <div className="toolbar" style={{ marginTop: 12, gap: 12, alignItems: "center" }}>
+          <strong>Admin blocks</strong>
+          <label>
+            Date{" "}
+            <input
+              type="date"
+              value={blockDate}
+              onChange={(e) => setBlockDate(e.target.value)}
+            />
+          </label>
+          <label>
+            Start{" "}
+            <input
+              type="time"
+              value={blockTime}
+              onChange={(e) => setBlockTime(e.target.value)}
+              step={900} // 15m
+            />
+          </label>
+          <label>
+            Duration{" "}
+            <input
+              type="number"
+              min={5}
+              max={480}
+              step={5}
+              value={blockDur}
+              onChange={(e) => setBlockDur(Number(e.target.value) || 0)}
+              style={{ width: 90 }}
+            />{" "}
+            min
+          </label>
+
+          <button onClick={blockInterval}>Block interval</button>
+          <span style={{ width: 12 }} />
+          <button onClick={blockWholeDay}>Block whole day</button>
+          <button onClick={unblockWholeDay}>Unblock whole day</button>
+        </div>
+
+        <table className="table" style={{ marginTop: 12 }}>
           <thead>
             <tr>
               <th>Date</th>
