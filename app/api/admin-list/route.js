@@ -8,7 +8,7 @@ const noCache = {
   Vary: "x-admin-key",
 };
 
-const STEP = 15; // хв
+const STEP = 15; // хв: 15-хв крок
 
 function isDateStr(s) {
   return /^\d{4}-\d{2}-\d{2}$/.test(s);
@@ -21,7 +21,7 @@ function minutesToTime(min) {
   const h = Math.floor(min / 60), m = min % 60;
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
-/** генерує усі 15-хв точки інтервалу від часу start на duration хв (включно зі стартом) */
+/** усі 15-хв точки інтервалу від часу start на duration хв (включно зі стартом) */
 function spanTimes(startStr, durationMin, step = STEP) {
   const start = parseTime(startStr);
   const end = start + Math.max(0, Number(durationMin) || 0);
@@ -61,10 +61,7 @@ export async function GET(req) {
     const adminKey = (req.headers.get("x-admin-key") || "").trim();
     const isAdmin = !!adminKey && adminKey === process.env.ADMIN_KEY;
     if (!isAdmin) {
-      return NextResponse.json(
-        { error: "unauthorized" },
-        { status: 401, headers: noCache }
-      );
+      return NextResponse.json({ error: "unauthorized" }, { status: 401, headers: noCache });
     }
 
     if (!start || !end || !isDateStr(start) || !isDateStr(end)) {
@@ -104,7 +101,7 @@ export async function GET(req) {
           });
         }
 
-        // 2) чисті адмін-блоки = blocked - сумарні інтервали бронювань
+        // 2) чисті адмін-блоки = blocked - усі інтервали бронювань
         const blockedSet = new Set(day.blocked || []);
         for (const b of day.bookings || []) {
           const pts = spanTimes(b.time, b?.durationMin ?? 45);
@@ -115,11 +112,11 @@ export async function GET(req) {
           rows.push({
             date: key,
             time: blk.time,
-            name: "",         // не клієнт
+            name: "",
             phone: "",
             paid: false,
             paymentId: "",
-            serviceTitle: "", // залишимо порожнім — статус покаже "blocked"
+            serviceTitle: "",
             price: "",
             durationMin: blk.durationMin,
             isBlock: true,
@@ -129,18 +126,13 @@ export async function GET(req) {
       cursor = page.cursor;
     } while (cursor);
 
-    rows.sort(
-      (a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time)
-    );
+    rows.sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
 
     return new NextResponse(JSON.stringify({ rows }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...noCache },
     });
-  } catch (e) {
-    return NextResponse.json(
-      { error: "server error" },
-      { status: 500, headers: noCache }
-    );
+  } catch {
+    return NextResponse.json({ error: "server error" }, { status: 500, headers: noCache });
   }
 }
