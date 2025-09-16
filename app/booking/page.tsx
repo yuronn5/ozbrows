@@ -8,7 +8,7 @@ import "./booking.css";
 import "../globals.css";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
-
+import { useRouter } from "next/navigation";
 const API_BASE = "/api";
 
 type Booking = {
@@ -121,6 +121,7 @@ export default function BookingPage() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
+  const router = useRouter();
 
   // вибрана послуга (може прийти з localStorage або з CustomEvent від модалки)
   const [selectedService, setSelectedService] = useState<null | {
@@ -324,12 +325,12 @@ export default function BookingPage() {
   return (
     <main className="container" style={{ padding: "28px 0 40px" }}>
       <div className="booking__header">
-        <Link href="/" className="back-home-btn">
+        <button onClick={() => router.replace("/")}  className="back-home-btn">
           <span className="icon">
             <ChevronLeft size={20} />
           </span>
           <span className="text">Back to Home</span>
-        </Link>
+        </button>
         <h1 className="display" style={{ marginBottom: 6 }}>
           Online Booking
         </h1>
