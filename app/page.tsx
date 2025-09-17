@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 
 import { useRouter } from "next/navigation";
 import PricesModal, { Service } from "./components/PricesModal";
+import TestimonialsSection from "./components/TestimonialsSection";
 
 export default function Page() {
   const [showPrices, setShowPrices] = useState(false);
@@ -289,54 +290,8 @@ export default function Page() {
       </section>
 
       {/* TESTIMONIALS + FAQ */}
-      <section className="container faq">
-        <div className="grid-2">
-          <div
-            id="reviews"
-            className="card reveal stack"
-            style={{ padding: 22 }}
-          >
-            <h2>Testimonials</h2>
-            <div className="quote">
-              <p>
-                “Perfect shape and color. Very attentive approach, the result
-                lasts long!”
-              </p>
-              <div className="name">— Maria K.</div>
-            </div>
-            <div className="quote">
-              <p>
-                “Lamination changed my mornings — no styling needed. Highly
-                recommend OzBrows!”
-              </p>
-              <div className="name">— Olena V.</div>
-            </div>
-          </div>
-          {/* <div id="faq" className="card reveal stack" style={{ padding: 22 }}>
-            <h2>FAQ</h2>
-            <div className="faq-item"><button className="faq-q" aria-expanded="false">What is brow lamination?<span>▾</span></button><div className="faq-a">A safe formula that fixes hairs in the desired direction, adds shine and neat look for up to 6 weeks.</div></div>
-            <div className="faq-item"><button className="faq-q" aria-expanded="false">How long does tinting last?<span>▾</span></button><div className="faq-a">Usually 3–4 weeks, depending on skin type and home care.</div></div>
-            <div className="faq-item"><button className="faq-q" aria-expanded="false">How often should I do shaping?<span>▾</span></button><div className="faq-a">Every 3–5 weeks to maintain clear form and neat look.</div></div>
-          </div> */}
-
-          <div id="pricing" className="card reveal" style={{ padding: 22 }}>
-            <h2>забрати секцію, зробити тестімонілс ширшою</h2>
-            <div className="price-row">
-              <span>Brow Shaping</span>
-              <span className="price">$30</span>
-            </div>
-            <div className="price-row">
-              <span>Brow Tinting</span>
-              <span className="price">$40</span>
-            </div>
-            <div className="price-row">
-              <span>Brow Lamination</span>
-              <span className="price">$50</span>
-            </div>
-          </div>
-          {/* <Pricing /> */}
-        </div>
-      </section>
+      
+      <TestimonialsSection />
 
       {/* CONTACT and faq */}
       <section id="contact" className="container contact">
