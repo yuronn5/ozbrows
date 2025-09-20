@@ -93,7 +93,7 @@ type BookPayload = {
   serviceTitle?: string;
   price?: string;
 };
-type ApiOk = { ok: true };
+type ApiOk = { ok: true; bookingId: string };
 type ApiErr = { error: string };
 
 async function apiBook(payload: BookPayload): Promise<ApiOk> {
@@ -269,34 +269,44 @@ export default function BookingPage() {
 
     try {
       setBusy(true);
-      await apiBook({
+      // 1) створити бронювання-утримання
+      const { bookingId } = await apiBook({
         date: dateStr,
         time: selected,
         name,
         phone,
         durationMin: durationNow,
-        serviceTitle: selectedService?.title, // ← ВАЖЛИВО
-        price: selectedService?.price, // ← ВАЖЛИВО
+        serviceTitle: selectedService?.title,
+        price: selectedService?.price,
       });
-      const day = await loadDay(dateStr);
-      const autoBlocked = Array.from(
-        new Set([
-          ...(day.blocked ?? []),
-          ...(day.bookings ?? []).flatMap((b) =>
-            rangeTimes(b.time, b.durationMin ?? SERVICE_DURATION)
-          ),
-        ])
-      ).sort((a, b) => parseTime(a) - parseTime(b));
-      setBlocked(autoBlocked);
-      setBookings(day.bookings ?? []);
-      setDateStr(null);
-      alert(`Запис підтверджено: ${dateStr} о ${selected}`);
+
+      // 2) створити checkout-сесію
+      const payRes = await fetch(`/api/pay/checkout?_=${Date.now()}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date: dateStr,
+          time: selected,
+          bookingId,
+          name,
+          phone,
+          serviceTitle: selectedService?.title,
+          price: selectedService?.price,
+        }),
+        cache: "no-store",
+      });
+      const payJson = (await payRes.json()) as { url?: string; error?: string };
+      if (!payRes.ok || !payJson.url)
+        throw new HttpError(payJson.error || "Checkout error", payRes.status);
+
+      // 3) редірект на Stripe
+      window.location.href = payJson.url;
     } catch (err) {
       if (err instanceof HttpError && err.status === 409) {
         alert("Обраний проміжок вже зайнятий. Оновлюю...");
         if (dateStr) openForDate(dateStr);
       } else {
-        alert("Помилка бронювання. Спробуйте ще раз.");
+        alert("Помилка. Спробуйте ще раз.");
         console.error(err);
       }
     } finally {
@@ -467,7 +477,7 @@ export default function BookingPage() {
                 onClick={handleConfirm}
                 disabled={busy || !selected || !name || !phone}
               >
-                {busy ? "Saving…" : "Confirm"}
+                {busy ? "Processing…" : "Pay deposit"}
               </button>
             </div>
           </div>
