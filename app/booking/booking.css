@@ -434,3 +434,80 @@
     gap: 8px;
   }
 }
+/* ===== Toast (mobile-first) ===== */
+.toast {
+  position: fixed;
+  z-index: 9999;
+  left: 12px;
+  right: 12px;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 12px 14px 12px;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.18);
+  border: 1px solid transparent;
+  background: #fff;
+  color: #111827;
+  animation: toast-slide-up .22s ease-out both;
+}
+
+/* колірні стани */
+.toast--success { background: #e6ffea; border-color: #16a34a; }
+.toast--info    { background: #fff7db; border-color: #f59e0b; }
+.toast--error   { background: #fee2e2; border-color: #ef4444; }
+
+.toast__icon { font-size: 18px; line-height: 1; }
+.toast__body { flex: 1; min-width: 0; }
+.toast__title { font-weight: 700; font-size: 15px; }
+.toast__text { font-size: 14px; opacity: .9; margin-top: 2px; }
+
+/* велика натискальна зона на мобільному */
+.toast__close {
+  appearance: none;
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: 18px;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* планшет/десктоп — зверху по центру, фіксована ширина */
+@media (min-width: 640px) {
+  .toast {
+    top: 16px;
+    bottom: auto;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: min(520px, calc(100vw - 32px));
+    padding: 12px 12px 12px 12px;
+  }
+}
+
+/* темна тема (якщо система в dark mode) */
+@media (prefers-color-scheme: dark) {
+  .toast {
+    background: #1f2937;
+    color: #f9fafb;
+    border-color: rgba(255,255,255,.18);
+  }
+  .toast--success { background: #0b3d24; border-color: #22c55e; }
+  .toast--info    { background: #3a2d05; border-color: #fbbf24; }
+  .toast--error   { background: #4c1d1d; border-color: #f87171; }
+}
+
+/* доступність: без анімацій */
+@media (prefers-reduced-motion: reduce) {
+  .toast { animation: none; }
+}
+
+@keyframes toast-slide-up {
+  from { transform: translateY(16px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}

@@ -132,6 +132,13 @@ export default function BookingPage() {
     durationMin: number;
   }>(null);
 
+  // ===== Toast state (mobile-first) =====
+  const [flash, setFlash] = useState<null | {
+    kind: "success" | "info" | "error";
+    title: string;
+    text?: string;
+  }>(null);
+
   // 1) Ініціалізація з localStorage (щоб 45m не миготіло)
   useEffect(() => {
     try {
@@ -170,6 +177,36 @@ export default function BookingPage() {
 
   const durationNow = selectedService?.durationMin ?? SERVICE_DURATION;
 
+  // 3) Після повернення зі Stripe: показати тост і почистити query
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    const paid = sp.get("paid");
+    const cancelled = sp.get("cancelled");
+    if (paid === "1") {
+      setFlash({
+        kind: "success",
+        title: "Оплата успішна",
+        text: "Завдаток отримано. Бронювання підтверджено ✅",
+      });
+    } else if (cancelled === "1") {
+      setFlash({
+        kind: "info",
+        title: "Оплату скасовано",
+        text: "Можете спробувати ще раз. Слот ще може бути вільний.",
+      });
+    }
+    if (paid || cancelled) {
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
+
+  // автозакриття тосту
+  useEffect(() => {
+    if (!flash) return;
+    const t = setTimeout(() => setFlash(null), 6000);
+    return () => clearTimeout(t);
+  }, [flash]);
+
   /* відкриття “модалки” для дати */
   const openForDate = async (d: string) => {
     setSelected(null);
@@ -194,7 +231,6 @@ export default function BookingPage() {
       setBlocked([]);
       setBookings([]);
       setSlots(genSlots(SLOT_MINUTES, durationNow));
-      // eslint-disable-next-line no-alert
       alert("Не вдалося завантажити зайнятість дня");
     }
   };
@@ -336,153 +372,153 @@ export default function BookingPage() {
     });
 
   return (
-    <main className="container" style={{ padding: "28px 0 40px" }}>
-      <div className="booking__header">
-        <button
-          type="button"
-          className="back-home-btn"
-          onClick={() => window.location.replace("/")}
-        >
-          <span className="icon">
-            <ChevronLeft size={20} />
-          </span>
-          <span className="text">Back to Home</span>
-        </button>
-        <h1 className="display" style={{ marginBottom: 6 }}>
-          Online Booking
-        </h1>
-        <p className="hero-lead booking__intro">
-          Click a date to choose a time and book your appointment.
-        </p>
-      </div>
-
-      <div className="booking__wrap">
-        <div
-          className="booking__card"
-          aria-label="Calendar for choosing a date"
-        >
-          <div ref={calRef} />
-        </div>
-      </div>
-
-      {/* Modal */}
-      {dateStr && (
-        <div
-          className="modal open"
-          onClick={onModalBgClick}
-          aria-modal="true"
-          role="dialog"
-        >
-          <div className="sheet" role="document">
-            {/* HEADER */}
-            <div className="sheet__header">
-              <div className="sheet__badge" aria-hidden>
-                📅
-              </div>
-              <div className="sheet__titles">
-                <h3 className="sheet__title">Choose a time</h3>
-                <div className="sheet__sub">
-                  {prettyDate}
-                  <span className="dot">•</span> Working hours:{" "}
-                  <b>08:00–20:00</b>
-                  <span className="dot">•</span> <b>{durationNow}m</b>
-                </div>
-              </div>
-            </div>
-
-            {/* SCROLLABLE BODY */}
-            <div className="sheet__body">
-              <div
-                className="slots"
-                role="listbox"
-                aria-label="Available times"
-              >
-                {slots.map((t) => {
-                  const disabled = isBlocked(t) || !fitsFrom(t) || overflows(t);
-                  const selectedNow = selected === t;
-                  return (
-                    <button
-                      key={t}
-                      role="option"
-                      aria-selected={selectedNow}
-                      className={`slot${selectedNow ? " selected" : ""}${
-                        disabled ? " disabled" : ""
-                      }`}
-                      onClick={() => !disabled && setSelected(t)}
-                      disabled={disabled}
-                    >
-                      {t}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* FORM */}
-              <div className="form">
-                <div>
-                  <label>
-                    Ім’я
-                    <input
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Ім’я"
-                      inputMode="text"
-                    />
-                  </label>
-                </div>
-                <div>
-                  <label>
-                    Телефон
-                    <input
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+380..."
-                      inputMode="tel"
-                    />
-                  </label>
-                </div>
-              </div>
-
-              {bookings?.length > 0 && (
-                <div className="admin-list">
-                  <h4>Bookings for this day</h4>
-                  <div>
-                    {bookings
-                      .slice()
-                      .sort((a, b) => parseTime(a.time) - parseTime(b.time))
-                      .map((b) => (
-                        <div className="row" key={`${b.time}-${b.name}`}>
-                          <span>
-                            {b.time}
-                            {b.durationMin ? ` (${b.durationMin}m)` : ""}
-                          </span>
-                          <span>{b.name}</span>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* STICKY FOOTER */}
-            <div className="sheet__footer">
-              <button
-                className="btn btn--ghost"
-                onClick={() => setDateStr(null)}
-              >
-                Close
-              </button>
-              <button
-                className="btn primary"
-                onClick={handleConfirm}
-                disabled={busy || !selected || !name || !phone}
-              >
-                {busy ? "Processing…" : "Pay deposit"}
-              </button>
-            </div>
+    <>
+      {/* Toast (mobile-first) */}
+      {flash && (
+        <div className={`toast toast--${flash.kind}`} role="alert" aria-live="polite">
+          <div className="toast__icon" aria-hidden>
+            {flash.kind === "success" ? "✅" : flash.kind === "error" ? "⛔️" : "ℹ️"}
           </div>
+          <div className="toast__body">
+            <div className="toast__title">{flash.title}</div>
+            {flash.text && <div className="toast__text">{flash.text}</div>}
+          </div>
+          <button className="toast__close" aria-label="Close" onClick={() => setFlash(null)}>
+            ✕
+          </button>
         </div>
       )}
-    </main>
+
+      <main className="container" style={{ padding: "28px 0 40px" }}>
+        <div className="booking__header">
+          <button
+            type="button"
+            className="back-home-btn"
+            onClick={() => window.location.replace("/")}
+          >
+            <span className="icon">
+              <ChevronLeft size={20} />
+            </span>
+            <span className="text">Back to Home</span>
+          </button>
+          <h1 className="display" style={{ marginBottom: 6 }}>
+            Online Booking
+          </h1>
+          <p className="hero-lead booking__intro">
+            Click a date to choose a time and book your appointment.
+          </p>
+        </div>
+
+        <div className="booking__wrap">
+          <div className="booking__card" aria-label="Calendar for choosing a date">
+            <div ref={calRef} />
+          </div>
+        </div>
+
+        {/* Modal */}
+        {dateStr && (
+          <div className="modal open" onClick={onModalBgClick} aria-modal="true" role="dialog">
+            <div className="sheet" role="document">
+              {/* HEADER */}
+              <div className="sheet__header">
+                <div className="sheet__badge" aria-hidden>
+                  📅
+                </div>
+                <div className="sheet__titles">
+                  <h3 className="sheet__title">Choose a time</h3>
+                  <div className="sheet__sub">
+                    {prettyDate}
+                    <span className="dot">•</span> Working hours: <b>08:00–20:00</b>
+                    <span className="dot">•</span> <b>{durationNow}m</b>
+                  </div>
+                </div>
+              </div>
+
+              {/* SCROLLABLE BODY */}
+              <div className="sheet__body">
+                <div className="slots" role="listbox" aria-label="Available times">
+                  {slots.map((t) => {
+                    const disabled = isBlocked(t) || !fitsFrom(t) || overflows(t);
+                    const selectedNow = selected === t;
+                    return (
+                      <button
+                        key={t}
+                        role="option"
+                        aria-selected={selectedNow}
+                        className={`slot${selectedNow ? " selected" : ""}${disabled ? " disabled" : ""}`}
+                        onClick={() => !disabled && setSelected(t)}
+                        disabled={disabled}
+                      >
+                        {t}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* FORM */}
+                <div className="form">
+                  <div>
+                    <label>
+                      Ім’я
+                      <input
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Ім’я"
+                        inputMode="text"
+                      />
+                    </label>
+                  </div>
+                  <div>
+                    <label>
+                      Телефон
+                      <input
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="+380..."
+                        inputMode="tel"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                {bookings?.length > 0 && (
+                  <div className="admin-list">
+                    <h4>Bookings for this day</h4>
+                    <div>
+                      {bookings
+                        .slice()
+                        .sort((a, b) => parseTime(a.time) - parseTime(b.time))
+                        .map((b) => (
+                          <div className="row" key={`${b.time}-${b.name}`}>
+                            <span>
+                              {b.time}
+                              {b.durationMin ? ` (${b.durationMin}m)` : ""}
+                            </span>
+                            <span>{b.name}</span>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* STICKY FOOTER */}
+              <div className="sheet__footer">
+                <button className="btn btn--ghost" onClick={() => setDateStr(null)}>
+                  Close
+                </button>
+                <button
+                  className="btn primary"
+                  onClick={handleConfirm}
+                  disabled={busy || !selected || !name || !phone}
+                >
+                  {busy ? "Processing…" : "Pay deposit"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+    </>
   );
 }
