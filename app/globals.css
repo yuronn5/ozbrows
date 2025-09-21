@@ -706,3 +706,34 @@ section.contact {
     padding: 8px 12px;
   }
 }
+/* Contacts */
+#contact .contact-row{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:12px; padding:16px 14px; margin:10px 0;
+  border:1px solid var(--border, #ececec);
+  border-radius:18px; background:rgba(255,255,255,.65);
+}
+#contact .contact-text{ display:grid; gap:4px; }
+#contact .contact-label{ font-weight:700; }
+#contact .contact-value{ color:var(--muted, #6b7280); }
+
+/* Icon buttons */
+#contact .icon-btn{
+  width:44px; height:44px; border-radius:999px;
+  display:grid; place-items:center; background:#fff;
+  border:1px solid var(--border, #ececec);
+  box-shadow:0 8px 22px rgba(0,0,0,.06);
+  transition:transform .15s ease, box-shadow .15s ease;
+}
+#contact .icon-btn svg{ width:22px; height:22px; stroke:#c0265d; }
+#contact .icon-btn:hover{ transform:translateY(-1px); box-shadow:0 14px 28px rgba(255,66,128,.22); }
+#contact .icon-btn--primary{ background:linear-gradient(180deg,#ff8ab2 0%,#ff5c96 100%); border-color:transparent; }
+#contact .icon-btn--primary svg{ stroke:#fff; }
+
+/* CTA spacing */
+#contact .book-cta{ margin-top:12px; }
+
+@media (max-width:640px){
+  #contact .contact-row{ padding:14px; }
+  #contact .icon-btn{ width:42px; height:42px; }
+}

@@ -4,6 +4,7 @@ import Link from "next/link";
 import Nav from "./components/Nav";
 import Gallery from "./components/Gallery";
 import { createPortal } from "react-dom";
+import { MapPin, Phone, Instagram } from "lucide-react";
 
 import { useRouter } from "next/navigation";
 import PricesModal, { Service } from "./components/PricesModal";
@@ -13,24 +14,96 @@ export default function Page() {
   const [showPrices, setShowPrices] = useState(false);
   const router = useRouter();
   const services: Service[] = [
-  // Brows
-  { id: "brow-lam-tint-tweeze", title: "Brow lamination + tint + tweeze", price: "$100", duration: "1 h", category: "Brows" },
-  { id: "brow-lam-tweeze", title: "Brow lamination + tweeze", price: "$85", duration: "30 min", category: "Brows" },
-  { id: "brow-tint", title: "Brow tint", price: "$40", duration: "25 min", category: "Brows" },
-  { id: "wax-brows", title: "Wax brows", price: "$25", duration: "15 min", category: "Brows" },
-  { id: "wax-tint", title: "Wax + tint", price: "$50", duration: "40 min", category: "Brows" },
-  { id: "lip-wax", title: "Lip wax", price: "$10", duration: "15 min", category: "Brows" },
+    // Brows
+    {
+      id: "brow-lam-tint-tweeze",
+      title: "Brow lamination + tint + tweeze",
+      price: "$100",
+      duration: "1 h",
+      category: "Brows",
+    },
+    {
+      id: "brow-lam-tweeze",
+      title: "Brow lamination + tweeze",
+      price: "$85",
+      duration: "30 min",
+      category: "Brows",
+    },
+    {
+      id: "brow-tint",
+      title: "Brow tint",
+      price: "$40",
+      duration: "25 min",
+      category: "Brows",
+    },
+    {
+      id: "wax-brows",
+      title: "Wax brows",
+      price: "$25",
+      duration: "15 min",
+      category: "Brows",
+    },
+    {
+      id: "wax-tint",
+      title: "Wax + tint",
+      price: "$50",
+      duration: "40 min",
+      category: "Brows",
+    },
+    {
+      id: "lip-wax",
+      title: "Lip wax",
+      price: "$10",
+      duration: "15 min",
+      category: "Brows",
+    },
 
-  // Lashes
-  { id: "lash-lift", title: "Lash lift (tint included)", price: "$100", duration: "1 h 30 min", category: "Lashes" },
-  { id: "lash-tint", title: "Lash tint", price: "$35", duration: "15 min", category: "Lashes" },
-  { id: "brow-lam-lash-lift", title: "Brow lamination + Lash lift", price: "$190", duration: "2 h", category: "Lashes" },
+    // Lashes
+    {
+      id: "lash-lift",
+      title: "Lash lift (tint included)",
+      price: "$100",
+      duration: "1 h 30 min",
+      category: "Lashes",
+    },
+    {
+      id: "lash-tint",
+      title: "Lash tint",
+      price: "$35",
+      duration: "15 min",
+      category: "Lashes",
+    },
+    {
+      id: "brow-lam-lash-lift",
+      title: "Brow lamination + Lash lift",
+      price: "$190",
+      duration: "2 h",
+      category: "Lashes",
+    },
 
-  // Make up
-  { id: "makeup-nude", title: "Nude makeup + lashes", price: "$90", duration: "1 h", category: "Make up" },
-  { id: "makeup-day", title: "Day makeup + lashes", price: "$100", duration: "1 h", category: "Make up" },
-  { id: "makeup-evening", title: "Evening makeup + lashes", price: "$120", duration: "1 h 15 min", category: "Make up" },
-];
+    // Make up
+    {
+      id: "makeup-nude",
+      title: "Nude makeup + lashes",
+      price: "$90",
+      duration: "1 h",
+      category: "Make up",
+    },
+    {
+      id: "makeup-day",
+      title: "Day makeup + lashes",
+      price: "$100",
+      duration: "1 h",
+      category: "Make up",
+    },
+    {
+      id: "makeup-evening",
+      title: "Evening makeup + lashes",
+      price: "$120",
+      duration: "1 h 15 min",
+      category: "Make up",
+    },
+  ];
   const openPricesModal = () => setShowPrices(true);
   const closePricesModal = () => setShowPrices(false);
 
@@ -290,7 +363,7 @@ export default function Page() {
       </section>
 
       {/* TESTIMONIALS + FAQ */}
-      
+
       <TestimonialsSection />
 
       {/* CONTACT and faq */}
@@ -328,34 +401,78 @@ export default function Page() {
 
             <div id="contact" className="card reveal" style={{ padding: 22 }}>
               <h2>Contacts</h2>
-              <div className="foot-card">
-                <strong>Address</strong>
-                <br />
-                <span>12 Example St, Kyiv</span>
-              </div>
-              <div className="foot-card">
-                <strong>Phone</strong>
-                <br />
-                <a href="tel:+380000000000">+380 00 000 00 00</a>
-              </div>
-              <div className="foot-card">
-                <strong>Instagram</strong>
-                <br />
+
+              {/* Address */}
+              <div className="contact-row">
+                <div className="contact-text">
+                  <div className="contact-label">Address</div>
+                  <div className="contact-value">
+                    3300 Clark Street, Chicago, IL
+                  </div>
+                </div>
                 <a
-                  href="https://instagram.com/ozbrows"
+                  className="icon-btn icon-btn--primary"
+                  href="https://www.google.com/maps/search/?api=1&query=3300%20Clark%20Street%2C%20Chicago%2C%20IL"
                   target="_blank"
-                  rel="noopener"
+                  rel="noopener noreferrer"
+                  aria-label="Open in Google Maps"
+                  title="Open in Google Maps"
                 >
-                  instagram.com/ozbrows
+                  <MapPin />
                 </a>
               </div>
+
+              {/* Phone */}
+              <div className="contact-row">
+                <div className="contact-text">
+                  <div className="contact-label">Phone</div>
+                  <div className="contact-value">657-627-3017</div>
+                </div>
+                <a
+                  className="icon-btn"
+                  href="tel:+16576273017"
+                  aria-label="Call 657-627-3017"
+                  title="Call"
+                >
+                  <Phone />
+                </a>
+              </div>
+
+              {/* Instagram */}
+              <div className="contact-row">
+                <div className="contact-text">
+                  <div className="contact-label">Instagram</div>
+                  <div className="contact-value">@ozbrows</div>
+                </div>
+                <a
+                  className="icon-btn"
+                  href="https://instagram.com/ozbrows"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Open Instagram @ozbrows"
+                  title="Open Instagram"
+                >
+                  <Instagram />
+                </a>
+              </div>
+
               <a
-                className="btn"
+                className="btn book-cta"
                 href="#"
-                data-book-url="https://calendly.com/your-link"
+                onClick={(e) => {
+                  e.preventDefault();
+                  openPricesModal();
+                }}
               >
-                Open Booking Form
+                Book Now
               </a>
+
+              <PricesModal
+                open={showPrices}
+                onClose={closePricesModal}
+                onSelect={handleSelectService}
+                services={services}
+              />
             </div>
 
             {/* <div className="stack">
