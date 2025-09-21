@@ -149,3 +149,43 @@ input:focus, select:focus{
   .table{ min-width: 760px; } /* не ламаємо колонки */
   .hide-sm{ display:none; }
 }
+/* ===== Desktop fit tweaks ===== */
+.table { table-layout: fixed; }                    /* стабільні ширини колонок */
+.table th, .table td {
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* Орієнтовні ширини, щоб усе влізло на 1200–1400px */
+.col-date   { width: 110px; }
+.col-time   { width: 80px; }
+.col-service{ width: 22%;  }  /* трошки простору під назву послуги */
+.col-dur    { width: 70px; }
+.col-client { width: 16%;  }
+.col-phone  { width: 140px; }
+.col-status { width: 110px; }
+.col-pay    { width: 220px; } /* довгі paymentId підрізаються елліпсисом */
+
+/* Трохи компактніші кнопки на десктопі */
+.toolbar button,
+.toolbar .primary,
+.toolbar .danger {
+  padding: 8px 14px;
+  font-size: 14px;
+  line-height: 1;
+  border-radius: 12px;
+}
+
+/* Піджимаємо відступи заголовків/рядків, щоб зменшити висоту */
+.table th { padding-top: 8px; padding-bottom: 8px; }
+.table td { padding-top: 8px; padding-bottom: 8px; }
+
+/* Коли ширина екрану менша — ще трохи стискаємо сервіс/пеймєнт */
+@media (max-width: 1280px) {
+  .col-service { width: 20%; }
+  .col-pay     { width: 180px; }
+}
+
+/* Якщо зовсім тісно (≤1120px), сховай Pay-колонку — в тебе вже є .hide-sm */
+@media (max-width: 1120px) {
+  .col-pay { display: none; }
+}

@@ -293,10 +293,10 @@ export default function AdminPage() {
               Block interval
             </button>
             <button className="btn soft" onClick={blockWholeDay}>
-              Block whole day
+              Block day
             </button>
             <button className="btn ghost" onClick={unblockWholeDay}>
-              Unblock whole day
+              Unblock day
             </button>
           </div>
         </div>
@@ -305,14 +305,30 @@ export default function AdminPage() {
           <table className="table">
             <thead>
               <tr>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Service</th>
-                <th>Duration</th>
-                <th className="hide-sm">Client</th>
-                <th>Phone</th>
-                <th>Status</th>
-                <th className="hide-sm">Payment</th>
+                <th className="col-date" title="Date">
+                  Date
+                </th>
+                <th className="col-time" title="Time">
+                  Time
+                </th>
+                <th className="col-service" title="Service">
+                  Service
+                </th>
+                <th className="col-dur" title="Duration">
+                  Dur
+                </th>
+                <th className="col-client hide-sm" title="Client name">
+                  Name
+                </th>
+                <th className="col-phone" title="Phone">
+                  Phone
+                </th>
+                <th className="col-status" title="Status">
+                  Status
+                </th>
+                <th className="col-pay hide-sm" title="Payment ID / method">
+                  Pay
+                </th>
                 <th></th>
               </tr>
             </thead>
@@ -326,7 +342,9 @@ export default function AdminPage() {
               ) : (
                 rows.map((r) => (
                   <tr
-                    key={`${r.date}-${r.time}-${r.name}-${r.phone}-${r.isBlock ? "blk" : "bk"}`}
+                    key={`${r.date}-${r.time}-${r.name}-${r.phone}-${
+                      r.isBlock ? "blk" : "bk"
+                    }`}
                   >
                     <td>{r.date}</td>
                     <td>{r.time}</td>
@@ -334,7 +352,9 @@ export default function AdminPage() {
                       {r.serviceTitle ? (
                         <>
                           {r.serviceTitle}{" "}
-                          {r.price ? <span className="muted">• {r.price}</span> : null}
+                          {r.price ? (
+                            <span className="muted">• {r.price}</span>
+                          ) : null}
                         </>
                       ) : (
                         <span className="muted">—</span>
@@ -343,12 +363,20 @@ export default function AdminPage() {
                     <td>{fmtDuration(r.durationMin)}</td>
                     <td
                       className="hide-sm"
-                      dangerouslySetInnerHTML={{ __html: escapeHtml(r.name || "") }}
+                      dangerouslySetInnerHTML={{
+                        __html: escapeHtml(r.name || ""),
+                      }}
                     />
-                    <td dangerouslySetInnerHTML={{ __html: escapeHtml(r.phone || "") }} />
+                    <td
+                      dangerouslySetInnerHTML={{
+                        __html: escapeHtml(r.phone || ""),
+                      }}
+                    />
                     <td>
                       <span
-                        className={`pill ${r.isBlock ? "blocked" : r.paid ? "paid" : ""}`}
+                        className={`pill ${
+                          r.isBlock ? "blocked" : r.paid ? "paid" : ""
+                        }`}
                       >
                         {r.isBlock ? "blocked" : r.paid ? "paid" : "booked"}
                       </span>
@@ -365,7 +393,9 @@ export default function AdminPage() {
                       {r.isBlock ? (
                         <button
                           className="btn ghost"
-                          onClick={() => unblock(r.date, r.time, r.durationMin || undefined)}
+                          onClick={() =>
+                            unblock(r.date, r.time, r.durationMin || undefined)
+                          }
                         >
                           Unblock
                         </button>
