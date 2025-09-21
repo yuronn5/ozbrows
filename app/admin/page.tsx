@@ -285,7 +285,6 @@ export default function AdminPage() {
               value={blockDur}
               onChange={(e) => setBlockDur(Number(e.target.value) || 0)}
             />
-            <span className="unit">min</span>
           </label>
 
           <div className="btns">
