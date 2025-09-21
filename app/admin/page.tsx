@@ -276,7 +276,7 @@ export default function AdminPage() {
             />
           </label>
           <label>
-            Duration
+            Duration (min)
             <input
               type="number"
               min={5}
