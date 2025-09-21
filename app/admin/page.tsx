@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import "./admin.css";
 
 type Row = {
@@ -46,7 +46,6 @@ export default function AdminPage() {
     d.setDate(d.getDate() + 30);
     return toISO(d);
   });
-  const [q, setQ] = useState("");
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -56,24 +55,8 @@ export default function AdminPage() {
   const [blockDur, setBlockDur] = useState<number>(45);
 
   useEffect(() => {
-    // no-op: сторінка клієнтська — усе ок
+    // no-op
   }, []);
-
-  const filtered = useMemo(() => {
-    const term = q.trim().toLowerCase();
-    if (!term) return rows;
-    return rows.filter((r) => {
-      const inName = (r.name || "").toLowerCase().includes(term);
-      const inPhone = (r.phone || "").toLowerCase().includes(term);
-      const inDate = r.date.toLowerCase().includes(term);
-      const inTime = r.time.toLowerCase().includes(term);
-      const inService = (r.serviceTitle || "").toLowerCase().includes(term);
-      const inDuration =
-        String(r.durationMin ?? "").toLowerCase().includes(term) ||
-        fmtDuration(r.durationMin).toLowerCase().includes(term);
-      return inName || inPhone || inDate || inTime || inService || inDuration;
-    });
-  }, [rows, q]);
 
   /* ---------- admin key + api ---------- */
   async function ensureAdminKey(): Promise<string> {
@@ -181,7 +164,7 @@ export default function AdminPage() {
         action: "admin-unblock",
         date,
         time,
-        durationMin, // бек уміє і сам визначити, але краще передати
+        durationMin,
       });
       setRows((prev) =>
         prev.filter((r) => !(r.isBlock && r.date === date && r.time === time))
@@ -202,17 +185,12 @@ export default function AdminPage() {
       return;
     }
     try {
-      await api<{ ok: true }>(
-        "/book",
-        {},
-        "POST",
-        {
-          action: "admin-block",
-          date: blockDate,
-          time: blockTime,
-          durationMin: Math.max(5, Math.min(8 * 60, Number(blockDur))),
-        }
-      );
+      await api<{ ok: true }>("/book", {}, "POST", {
+        action: "admin-block",
+        date: blockDate,
+        time: blockTime,
+        durationMin: Math.max(5, Math.min(8 * 60, Number(blockDur))),
+      });
       alert(`Blocked ${blockTime} for ${blockDur}m on ${blockDate}`);
     } catch (e) {
       alert(e instanceof Error ? e.message : "Failed to block interval");
@@ -248,49 +226,6 @@ export default function AdminPage() {
     }
   }
 
-  function downloadCsv() {
-    const header = [
-      "date",
-      "time",
-      "serviceTitle",
-      "durationMin",
-      "price",
-      "name",
-      "phone",
-      "status",
-      "paymentId",
-    ];
-    const lines = [header.join(",")];
-    filtered.forEach((r) => {
-      const status = r.isBlock ? "blocked" : r.paid ? "paid" : "booked";
-      const vals = [
-        r.date,
-        r.time,
-        r.serviceTitle || "",
-        String(r.durationMin ?? ""),
-        r.price || "",
-        r.name || "",
-        r.phone || "",
-        status,
-        r.paymentId || "",
-      ].map((v) => `"${(v || "").toString().replace(/"/g, '""')}"`);
-      lines.push(vals.join(","));
-    });
-    const csv = lines.join("\n");
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(
-      new Blob([csv], { type: "text/csv;charset=utf-8;" })
-    );
-    a.download = `bookings_${from}_to_${to}.csv`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-  }
-
-  function logout() {
-    sessionStorage.removeItem("ADMIN_KEY");
-    alert("PIN cleared. Reload page and enter again.");
-  }
-
   /* ---------- UI ---------- */
   return (
     <div className="wrap">
@@ -299,7 +234,7 @@ export default function AdminPage() {
 
         <div className="toolbar">
           <label>
-            From{" "}
+            From
             <input
               type="date"
               value={from}
@@ -307,37 +242,24 @@ export default function AdminPage() {
             />
           </label>
           <label>
-            To{" "}
+            To
             <input
               type="date"
               value={to}
               onChange={(e) => setTo(e.target.value)}
             />
           </label>
-          <button className="primary" onClick={load} disabled={loading}>
+
+          <button className="btn primary" onClick={load} disabled={loading}>
             {loading ? "Loading…" : "Load"}
           </button>
-
-          <div className="right">
-            <input
-              className="search"
-              placeholder="Search name/phone/date/time/service"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-            />
-            <button onClick={downloadCsv}>Export CSV</button>
-            <button onClick={logout}>Change PIN</button>
-          </div>
         </div>
 
         {/* Admin blocks panel */}
-        <div
-          className="toolbar"
-          style={{ marginTop: 12, gap: 12, alignItems: "center" }}
-        >
+        <div className="toolbar blocks">
           <strong>Admin blocks</strong>
           <label>
-            Date{" "}
+            Date
             <input
               type="date"
               value={blockDate}
@@ -345,7 +267,7 @@ export default function AdminPage() {
             />
           </label>
           <label>
-            Start{" "}
+            Start
             <input
               type="time"
               value={blockTime}
@@ -354,7 +276,7 @@ export default function AdminPage() {
             />
           </label>
           <label>
-            Duration{" "}
+            Duration
             <input
               type="number"
               min={5}
@@ -362,111 +284,106 @@ export default function AdminPage() {
               step={5}
               value={blockDur}
               onChange={(e) => setBlockDur(Number(e.target.value) || 0)}
-              style={{ width: 90 }}
-            />{" "}
-            min
+            />
+            <span className="unit">min</span>
           </label>
 
-          <button onClick={blockInterval}>Block interval</button>
-          <span style={{ width: 12 }} />
-          <button onClick={blockWholeDay}>Block whole day</button>
-          <button onClick={unblockWholeDay}>Unblock whole day</button>
+          <div className="btns">
+            <button className="btn primary" onClick={blockInterval}>
+              Block interval
+            </button>
+            <button className="btn soft" onClick={blockWholeDay}>
+              Block whole day
+            </button>
+            <button className="btn ghost" onClick={unblockWholeDay}>
+              Unblock whole day
+            </button>
+          </div>
         </div>
 
-        <table className="table" style={{ marginTop: 12 }}>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Time</th>
-              <th>Service</th>
-              <th>Duration</th>
-              <th className="hide-sm">Client</th>
-              <th>Phone</th>
-              <th>Status</th>
-              <th className="hide-sm">Payment</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 ? (
+        <div className="table-wrap">
+          <table className="table">
+            <thead>
               <tr>
-                <td colSpan={9} className="empty">
-                  No data yet. Choose dates and click <b>Load</b>.
-                </td>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Service</th>
+                <th>Duration</th>
+                <th className="hide-sm">Client</th>
+                <th>Phone</th>
+                <th>Status</th>
+                <th className="hide-sm">Payment</th>
+                <th></th>
               </tr>
-            ) : (
-              filtered.map((r) => (
-                <tr
-                  key={`${r.date}-${r.time}-${r.name}-${r.phone}-${
-                    r.isBlock ? "blk" : "bk"
-                  }`}
-                >
-                  <td>{r.date}</td>
-                  <td>{r.time}</td>
-                  <td>
-                    {r.serviceTitle ? (
-                      <>
-                        {r.serviceTitle}{" "}
-                        {r.price ? (
-                          <span className="muted">• {r.price}</span>
-                        ) : null}
-                      </>
-                    ) : (
-                      <span className="muted">—</span>
-                    )}
-                  </td>
-                  <td>{fmtDuration(r.durationMin)}</td>
-                  <td
-                    className="hide-sm"
-                    dangerouslySetInnerHTML={{
-                      __html: escapeHtml(r.name || ""),
-                    }}
-                  />
-                  <td
-                    dangerouslySetInnerHTML={{
-                      __html: escapeHtml(r.phone || ""),
-                    }}
-                  />
-                  <td>
-                    <span
-                      className={`pill ${
-                        r.isBlock ? "blocked" : r.paid ? "paid" : ""
-                      }`}
-                    >
-                      {r.isBlock ? "blocked" : r.paid ? "paid" : "booked"}
-                    </span>
-                  </td>
-                  <td
-                    className="hide-sm"
-                    dangerouslySetInnerHTML={{
-                      __html: r.paymentId
-                        ? escapeHtml(r.paymentId)
-                        : '<span class="muted">—</span>',
-                    }}
-                  />
-                  <td style={{ textAlign: "right" }}>
-                    {r.isBlock ? (
-                      <button
-                        onClick={() =>
-                          unblock(r.date, r.time, r.durationMin || undefined)
-                        }
-                      >
-                        Unblock
-                      </button>
-                    ) : (
-                      <button
-                        className="danger"
-                        onClick={() => cancel(r.date, r.time)}
-                      >
-                        Cancel
-                      </button>
-                    )}
+            </thead>
+            <tbody>
+              {rows.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="empty">
+                    No data yet. Choose dates and click <b>Load</b>.
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                rows.map((r) => (
+                  <tr
+                    key={`${r.date}-${r.time}-${r.name}-${r.phone}-${r.isBlock ? "blk" : "bk"}`}
+                  >
+                    <td>{r.date}</td>
+                    <td>{r.time}</td>
+                    <td>
+                      {r.serviceTitle ? (
+                        <>
+                          {r.serviceTitle}{" "}
+                          {r.price ? <span className="muted">• {r.price}</span> : null}
+                        </>
+                      ) : (
+                        <span className="muted">—</span>
+                      )}
+                    </td>
+                    <td>{fmtDuration(r.durationMin)}</td>
+                    <td
+                      className="hide-sm"
+                      dangerouslySetInnerHTML={{ __html: escapeHtml(r.name || "") }}
+                    />
+                    <td dangerouslySetInnerHTML={{ __html: escapeHtml(r.phone || "") }} />
+                    <td>
+                      <span
+                        className={`pill ${r.isBlock ? "blocked" : r.paid ? "paid" : ""}`}
+                      >
+                        {r.isBlock ? "blocked" : r.paid ? "paid" : "booked"}
+                      </span>
+                    </td>
+                    <td
+                      className="hide-sm"
+                      dangerouslySetInnerHTML={{
+                        __html: r.paymentId
+                          ? escapeHtml(r.paymentId)
+                          : '<span class="muted">—</span>',
+                      }}
+                    />
+                    <td className="actions">
+                      {r.isBlock ? (
+                        <button
+                          className="btn ghost"
+                          onClick={() => unblock(r.date, r.time, r.durationMin || undefined)}
+                        >
+                          Unblock
+                        </button>
+                      ) : (
+                        <button
+                          className="btn danger"
+                          onClick={() => cancel(r.date, r.time)}
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

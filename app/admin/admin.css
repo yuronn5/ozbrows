@@ -1,144 +1,151 @@
 :root{
-  --bg:#f5f7fb; --card:#fff; --muted:#6b7280; --text:#111827;
-  --primary:#2563eb; --danger:#ef4444; --border:#e5e7eb;
+  --bg:#f7f7fb;
+  --card:#fff;
+  --text:#111827;
+  --muted:#6b7280;
+  --border:#e5e7eb;
+
+  /* рожеві відтінки */
+  --pink:      #f472b6; /* primary */
+  --pink-600:  #ec4899;
+  --pink-700:  #db2777;
+  --pink-100:  #fce7f3;
+  --ring:      rgba(236,72,153,.35);
 }
 
 *{ box-sizing:border-box }
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+}
 
-body{ margin:0; background:var(--bg); color:var(--text);
-  font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif; }
-
+/* layout */
 .wrap{ max-width:980px; margin:32px auto; padding:0 16px; }
+.card{
+  background:var(--card);
+  border-radius:16px;
+  box-shadow:0 10px 30px rgba(0,0,0,.08);
+  padding:16px;
+}
+h1{ margin:0 0 12px; font-size:22px; letter-spacing:.2px; }
 
-.card{ background:var(--card); border-radius:16px;
-  box-shadow:0 8px 30px rgba(0,0,0,.08); padding:16px; }
-
-h1{ margin:0 0 12px; font-size:20px; }
-
-.toolbar{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-
+/* inputs & buttons */
 input,button,select{
-  border:1px solid var(--border); background:#fff; border-radius:10px;
-  padding:8px 10px; font-size:14px;
+  border:1px solid var(--border);
+  background:#fff;
+  border-radius:12px;
+  padding:10px 12px;
+  font-size:14px;
+  outline: none;
+}
+input:focus, select:focus{
+  border-color: var(--pink-600);
+  box-shadow: 0 0 0 3px var(--ring);
 }
 
-button.primary{ background:var(--primary); color:#fff; border-color:transparent; }
-button.danger{ background:var(--danger); color:#fff; border-color:transparent; }
+/* unified buttons */
+.btn{
+  cursor:pointer;
+  border-radius:12px;
+  padding:10px 14px;
+  border:1px solid var(--border);
+  background:#fff;
+  transition:transform .05s ease, box-shadow .2s ease, background .2s ease;
+}
+.btn:active{ transform: translateY(1px); }
+.btn.primary{
+  background: linear-gradient(180deg, var(--pink) 0%, var(--pink-600) 100%);
+  color:#fff; border-color: transparent;
+  box-shadow: 0 6px 18px rgba(236,72,153,.25);
+}
+.btn.primary:hover{ filter: brightness(1.03); }
+.btn.soft{
+  background: var(--pink-100);
+  color: var(--pink-700);
+  border-color: rgba(236,72,153,.35);
+}
+.btn.ghost{
+  background:#fff;
+  color: var(--pink-700);
+  border-color: rgba(236,72,153,.45);
+}
+.btn.danger{
+  background: #ffe4ea;
+  color: #b42318;
+  border-color: #fecdd3;
+}
 
-.table{ width:100%; border-collapse:collapse; margin-top:12px; }
+/* toolbars */
+.toolbar{
+  display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;
+  padding:8px 0;
+}
+.toolbar label{
+  display:flex; flex-direction:column; gap:6px; font-size:13px;
+}
+.toolbar .btn{ align-self:end; }
+
+/* blocks panel */
+.toolbar.blocks{
+  margin-top: 10px;
+  gap:12px;
+  align-items: end;
+}
+.toolbar.blocks .unit{ margin-left:6px; color:var(--muted); font-size:13px; }
+.toolbar.blocks .btns{ display:flex; gap:8px; flex-wrap:wrap; }
+
+/* table */
+.table-wrap{ margin-top:12px; }
+.table{
+  width:100%; border-collapse:collapse;
+}
 .table th,.table td{
-  border-bottom:1px solid var(--border); padding:10px; text-align:left;
-  font-size:14px; vertical-align:top;
+  border-bottom:1px solid var(--border);
+  padding:10px 12px; text-align:left; font-size:14px; vertical-align:top;
 }
+.table thead th{ font-weight:600; color:#0f172a; }
 
-.pill{ padding:2px 8px; border-radius:999px; font-size:12px; display:inline-block;
-  background:#eef2ff; color:#1e3a8a; }
+.actions{ text-align:right; white-space:nowrap; }
+
+/* badges */
+.pill{
+  padding:3px 10px; border-radius:999px; font-size:12px; display:inline-block;
+  background:#eef2ff; color:#1e3a8a;
+}
 .pill.paid{ background:#ecfdf5; color:#065f46; }
+.pill.blocked{ background:#ffe8e8; color:#b42318; }
 
 .muted{ color:var(--muted); }
-
-.right{ margin-left:auto; display:flex; gap:8px; }
-.search{ flex:1; min-width:180px; }
 .empty{ text-align:center; padding:32px; color:var(--muted); }
+.hide-sm{}
 
-@media (max-width:600px){ .hide-sm{ display:none } }
-/* ===========================
-   Mobile / small screens
-   =========================== */
+/* responsive */
 @media (max-width: 820px) {
-  .card { padding: 16px; border-radius: 16px; }
-  h1 { font-size: 26px; line-height: 1.2; }
+  .card { padding:16px; border-radius:16px; }
+  h1{ font-size:20px; }
 }
-
-/* телефони */
 @media (max-width: 640px) {
-  /* загальні дрібні зменшення */
-  .card { padding: 14px; border-radius: 14px; }
-  h1 { font-size: 22px; margin-bottom: 8px; }
+  .card { padding:14px; border-radius:14px; }
+  h1{ font-size:18px; margin-bottom:6px; }
 
-  /* тулбар стає стовпчиком/гридом */
-  .toolbar {
-    display: grid;
+  .toolbar{
+    display:grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    align-items: center;
+    gap:8px;
+    align-items:end;
   }
-  .toolbar label {
-    display: grid;
-    gap: 4px;
-    font-size: 13px;
+  .toolbar .btn{
+    height:42px;
   }
-  .toolbar input[type="date"],
-  .toolbar input[type="time"],
-  .toolbar input[type="number"],
-  .toolbar .search {
-    width: 100%;
-    height: 40px;
-    padding: 8px 10px;
-    font-size: 14px;
+  .toolbar.blocks{
+    grid-template-columns: 1fr 1fr;
   }
-
-  /* права частина тулбара вниз і на всю ширину */
-  .toolbar .right {
+  .toolbar.blocks .btns{
     grid-column: 1 / -1;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-  .toolbar .right .search {
-    grid-column: 1 / -1; /* пошук на всю ширину */
-  }
-  .toolbar button,
-  .toolbar .primary,
-  .toolbar .danger {
-    height: 40px;
-    padding: 0 12px;
-    font-size: 14px;
-    border-radius: 10px;
   }
 
-  /* таблиця: горизонтальний скрол без зламу розмітки */
-  .table {
-    display: block;           /* дозволяє overflow-x */
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    border-spacing: 0;
-  }
-  .table thead th,
-  .table tbody td {
-    white-space: nowrap;      /* щоб колонки не ламались */
-    padding: 10px 12px;
-    font-size: 14px;
-  }
-
-  /* приховуємо менш важливі колонки, якщо ти їх помічаєш .hide-sm */
-  .table .hide-sm {
-    display: none;
-  }
-
-  /* клітинка з діями */
-  .table td:last-child {
-    text-align: right;
-  }
-  .table td:last-child .danger,
-  .table td:last-child button {
-    height: 36px;
-    padding: 0 12px;
-    font-size: 14px;
-  }
-
-  /* бейджі */
-  .pill { font-size: 12px; padding: 4px 10px; }
-  .muted { font-size: 13px; }
-
-  /* дрібні відступи між рядками */
-  .table tr + tr td {
-    border-top-width: 0; /* якщо у тебе є розділювачі — зменшить густоту */
-  }
-}
-.pill.blocked {
-  background: #ffe8e8;
-  color: #b42318;
-  border-color: transparent;
+  /* горизонтальний скрол таблиці */
+  .table-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .table{ min-width: 760px; } /* не ламаємо колонки */
+  .hide-sm{ display:none; }
 }
