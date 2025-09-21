@@ -326,10 +326,12 @@ export default function AdminPage() {
                 <th className="col-status" title="Status">
                   Status
                 </th>
-                <th className="col-pay hide-sm" title="Payment ID / method">
+                <th className="col-pay hide-sm" title="Payment">
                   Pay
                 </th>
-                <th></th>
+                <th className="col-act" title="Actions">
+                  Act
+                </th>
               </tr>
             </thead>
             <tbody>

@@ -189,3 +189,25 @@ input:focus, select:focus{
 @media (max-width: 1120px) {
   .col-pay { display: none; }
 }
+/* Колонки: фіксована розкладка + еліпсис — у тебе це вже є */
+.table { table-layout: fixed; }
+.table th, .table td { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Ширини (залишаються як були) + нова колонка Act */
+.col-act { width: 104px; }
+.table td.col-act { text-align: right; }
+.table td.col-act .btn { height: 32px; padding: 0 12px; font-size: 13px; }
+
+/* Кнопочки для дій */
+.btn { border: 1px solid var(--border); border-radius: 10px; background:#fff; }
+.btn--light { background:#fff; }
+.btn--danger {
+  color:#fff; border-color: transparent;
+  background: linear-gradient(180deg, #ff6aa0 0%, #ff4280 100%);
+  box-shadow: 0 6px 18px rgba(255, 66, 128, .25);
+}
+
+/* На тісних десктопах ховаємо Pay, але НЕ Act */
+@media (max-width: 1120px) {
+  .col-pay { display:none; }
+}
