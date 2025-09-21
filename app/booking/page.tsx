@@ -14,16 +14,15 @@ type Booking = {
   time: string;
   name: string;
   phone?: string;
-  durationMin?: number; // приходить з /availability (для клієнтського блокування)
+  durationMin?: number;
 };
 type DayData = { blocked: string[]; bookings: Booking[] };
 
 const WORK_START = 8,
   WORK_END = 20;
 const SLOT_MINUTES = 15,
-  SERVICE_DURATION = 45; // дефолт, якщо послугу ще не обрали
+  SERVICE_DURATION = 45;
 
-/** HttpError з кодом статусу — щоб не використовувати any */
 class HttpError extends Error {
   status: number;
   constructor(message: string, status: number) {
@@ -48,7 +47,7 @@ function clampEnd(min: number) {
 }
 function genSlots(step = SLOT_MINUTES, durationMin = SERVICE_DURATION) {
   const out: string[] = [];
-  const latestStart = WORK_END * 60 - durationMin; // останній старт під тривалість
+  const latestStart = WORK_END * 60 - durationMin;
   for (let h = WORK_START; h < WORK_END; h++) {
     for (let m = 0; m < 60; m += step) {
       const min = h * 60 + m;
@@ -123,7 +122,6 @@ export default function BookingPage() {
   const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
 
-  // вибрана послуга (може прийти з localStorage або з CustomEvent від модалки)
   const [selectedService, setSelectedService] = useState<null | {
     title?: string;
     price?: string;
@@ -137,7 +135,6 @@ export default function BookingPage() {
     text?: string;
   }>(null);
 
-  // 1) Ініціалізація з localStorage (щоб 45m не миготіло)
   useEffect(() => {
     try {
       const raw = localStorage.getItem("selectedService");
@@ -155,7 +152,6 @@ export default function BookingPage() {
     } catch {}
   }, []);
 
-  // 2) Живе оновлення з модалки
   useEffect(() => {
     const onPick = (e: Event) => {
       const det = (e as CustomEvent).detail as
@@ -175,7 +171,6 @@ export default function BookingPage() {
 
   const durationNow = selectedService?.durationMin ?? SERVICE_DURATION;
 
-  // 3) Після повернення зі Stripe
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
     const paid = sp.get("paid");
@@ -200,14 +195,12 @@ export default function BookingPage() {
     }
   }, []);
 
-  // автозакриття тосту
   useEffect(() => {
     if (!flash) return;
     const t = setTimeout(() => setFlash(null), 6000);
     return () => clearTimeout(t);
   }, [flash]);
 
-  /* відкриття “модалки” для дати */
   const openForDate = async (d: string) => {
     setSelected(null);
     setName("");
@@ -234,7 +227,6 @@ export default function BookingPage() {
     }
   };
 
-  /* ініціалізація календаря */
   useEffect(() => {
     if (!calRef.current) return;
 
@@ -292,7 +284,6 @@ export default function BookingPage() {
     !rangeTimes(t, durationNow).some((s) => blocked.includes(s));
   const overflows = (t: string) => parseTime(t) + durationNow > WORK_END * 60;
 
-  // ====== повернення до оплати з localStorage ======
   async function resumePayFromStorage() {
     try {
       const raw = localStorage.getItem("lastBooking");
@@ -310,7 +301,7 @@ export default function BookingPage() {
       const r = await fetch(`/api/pay/checkout?_=${Date.now()}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload), // створюємо НОВУ сесію
+        body: JSON.stringify(payload),
         cache: "no-store",
       });
       const j = (await r.json()) as { url?: string; error?: string };
@@ -335,7 +326,6 @@ export default function BookingPage() {
 
     try {
       setBusy(true);
-      // 1) створити бронювання-утримання
       const { bookingId } = await apiBook({
         date: dateStr,
         time: selected,
@@ -346,7 +336,6 @@ export default function BookingPage() {
         price: selectedService?.price,
       });
 
-      // 1.1) запам’ятати для можливого повернення до оплати
       try {
         localStorage.setItem(
           "lastBooking",
@@ -362,7 +351,6 @@ export default function BookingPage() {
         );
       } catch {}
 
-      // 2) створити checkout-сесію
       const payRes = await fetch(`/api/pay/checkout?_=${Date.now()}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -381,7 +369,6 @@ export default function BookingPage() {
       if (!payRes.ok || !payJson.url)
         throw new HttpError(payJson.error || "Checkout error", payRes.status);
 
-      // 3) редірект на Stripe
       window.location.href = payJson.url;
     } catch (err) {
       if (err instanceof HttpError && err.status === 409) {
@@ -430,7 +417,6 @@ export default function BookingPage() {
             {flash.text && <div className="toast__text">{flash.text}</div>}
           </div>
 
-          {/* Кнопка «Pay now» тільки для cancelled/info */}
           {flash.kind === "info" ? (
             <button className="toast__action" onClick={resumePayFromStorage}>
               Pay now

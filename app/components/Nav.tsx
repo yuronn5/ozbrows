@@ -69,7 +69,6 @@ export default function Nav() {
           <span>OzBrows</span>
         </a>
 
-        {/* Desktop menu */}
         <div className="menu" role="menu">
           <a href="#services">Services</a>
           <a href="#pricing">Pricing</a>
@@ -79,7 +78,6 @@ export default function Nav() {
           <a href="#contact">Contacts</a>
         </div>
 
-        {/* Desktop CTA → відкриває модалку з послугами */}
         <a
           href="#"
           className="btn"
@@ -91,7 +89,6 @@ export default function Nav() {
           Book Now
         </a>
 
-        {/* Burger (shown on mobile) */}
         <button
           className={`burger ${open ? "is-open" : ""}`}
           aria-label="Toggle menu"
@@ -105,7 +102,6 @@ export default function Nav() {
         </button>
       </div>
 
-      {/* Mobile sheet */}
       <div
         id="mobile-menu"
         className={`mobile-sheet ${open ? "open" : ""}`}
@@ -130,7 +126,6 @@ export default function Nav() {
             <a href="#contact" onClick={() => setOpen(false)}>Contacts</a>
           </div>
 
-          {/* Mobile CTA → теж відкриває модалку */}
           <a
             href="#"
             className="btn mobile-cta"
@@ -147,7 +142,6 @@ export default function Nav() {
       {/* Backdrop */}
       <div className={`backdrop ${open ? "show" : ""}`} onClick={() => setOpen(false)} />
 
-      {/* Модалка з цінами/послугами */}
       <PricesModal
         open={showPrices}
         onClose={closePrices}

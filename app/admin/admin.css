@@ -1,171 +1,267 @@
-:root{
-  --bg:#f7f7fb;
-  --card:#fff;
-  --text:#111827;
-  --muted:#6b7280;
-  --border:#e5e7eb;
+:root {
+  --bg: #f7f7fb;
+  --card: #fff;
+  --text: #111827;
+  --muted: #6b7280;
+  --border: #e5e7eb;
 
   /* рожеві відтінки */
-  --pink:      #f472b6; /* primary */
-  --pink-600:  #ec4899;
-  --pink-700:  #db2777;
-  --pink-100:  #fce7f3;
-  --ring:      rgba(236,72,153,.35);
+  --pink: #f472b6; /* primary */
+  --pink-600: #ec4899;
+  --pink-700: #db2777;
+  --pink-100: #fce7f3;
+  --ring: rgba(236, 72, 153, 0.35);
 }
 
-*{ box-sizing:border-box }
-body{
-  margin:0; background:var(--bg); color:var(--text);
-  font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, system-ui, Segoe UI, Roboto, Arial, sans-serif;
 }
 
 /* layout */
-.wrap{ max-width:980px; margin:32px auto; padding:0 16px; }
-.card{
-  background:var(--card);
-  border-radius:16px;
-  box-shadow:0 10px 30px rgba(0,0,0,.08);
-  padding:16px;
+.wrap {
+  max-width: 980px;
+  margin: 32px auto;
+  padding: 0 16px;
 }
-h1{ margin:0 0 12px; font-size:22px; letter-spacing:.2px; }
+.card {
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  padding: 16px;
+}
+h1 {
+  margin: 0 0 12px;
+  font-size: 22px;
+  letter-spacing: 0.2px;
+}
 
 /* inputs & buttons */
-input,button,select{
-  border:1px solid var(--border);
-  background:#fff;
-  border-radius:12px;
-  padding:10px 12px;
-  font-size:14px;
+input,
+button,
+select {
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
   outline: none;
 }
-input:focus, select:focus{
+input:focus,
+select:focus {
   border-color: var(--pink-600);
   box-shadow: 0 0 0 3px var(--ring);
 }
 
 /* unified buttons */
-.btn{
-  cursor:pointer;
-  border-radius:12px;
-  padding:10px 14px;
-  border:1px solid var(--border);
-  background:#fff;
-  transition:transform .05s ease, box-shadow .2s ease, background .2s ease;
+.btn {
+  cursor: pointer;
+  border-radius: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  background: #fff;
+  transition: transform 0.05s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
-.btn:active{ transform: translateY(1px); }
-.btn.primary{
+.btn:active {
+  transform: translateY(1px);
+}
+.btn.primary {
   background: linear-gradient(180deg, var(--pink) 0%, var(--pink-600) 100%);
-  color:#fff; border-color: transparent;
-  box-shadow: 0 6px 18px rgba(236,72,153,.25);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 6px 18px rgba(236, 72, 153, 0.25);
 }
-.btn.primary:hover{ filter: brightness(1.03); }
-.btn.soft{
+.btn.primary:hover {
+  filter: brightness(1.03);
+}
+.btn.soft {
   background: var(--pink-100);
   color: var(--pink-700);
-  border-color: rgba(236,72,153,.35);
+  border-color: rgba(236, 72, 153, 0.35);
 }
-.btn.ghost{
-  background:#fff;
+.btn.ghost {
+  background: #fff;
   color: var(--pink-700);
-  border-color: rgba(236,72,153,.45);
+  border-color: rgba(236, 72, 153, 0.45);
 }
-.btn.danger{
+.btn.danger {
   background: #ffe4ea;
   color: #b42318;
   border-color: #fecdd3;
 }
 
 /* toolbars */
-.toolbar{
-  display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;
-  padding:8px 0;
+.toolbar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  padding: 8px 0;
 }
-.toolbar label{
-  display:flex; flex-direction:column; gap:6px; font-size:13px;
+.toolbar label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
 }
-.toolbar .btn{ align-self:end; }
+.toolbar .btn {
+  align-self: end;
+}
 
 /* blocks panel */
-.toolbar.blocks{
+.toolbar.blocks {
   margin-top: 10px;
-  gap:12px;
+  gap: 12px;
   align-items: end;
 }
-.toolbar.blocks .unit{ margin-left:6px; color:var(--muted); font-size:13px; }
-.toolbar.blocks .btns{ display:flex; gap:8px; flex-wrap:wrap; }
+.toolbar.blocks .unit {
+  margin-left: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.toolbar.blocks .btns {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
 
 /* table */
-.table-wrap{ margin-top:12px; }
-.table{
-  width:100%; border-collapse:collapse;
+.table-wrap {
+  margin-top: 12px;
 }
-.table th,.table td{
-  border-bottom:1px solid var(--border);
-  padding:10px 12px; text-align:left; font-size:14px; vertical-align:top;
+.table {
+  width: 100%;
+  border-collapse: collapse;
 }
-.table thead th{ font-weight:600; color:#0f172a; }
-
-.actions{ text-align:right; white-space:nowrap; }
+.table th,
+.table td {
+  border-bottom: 1px solid var(--border);
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 14px;
+  vertical-align: top;
+}
+.table thead th {
+  font-weight: 600;
+  color: #0f172a;
+}
+.actions {
+  text-align: right;
+  white-space: nowrap;
+}
 
 /* badges */
-.pill{
-  padding:3px 10px; border-radius:999px; font-size:12px; display:inline-block;
-  background:#eef2ff; color:#1e3a8a;
+.pill {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  display: inline-block;
+  background: #eef2ff;
+  color: #1e3a8a;
 }
-.pill.paid{ background:#ecfdf5; color:#065f46; }
-.pill.blocked{ background:#ffe8e8; color:#b42318; }
-
-.muted{ color:var(--muted); }
-.empty{ text-align:center; padding:32px; color:var(--muted); }
-.hide-sm{}
+.pill.paid {
+  background: #ecfdf5;
+  color: #065f46;
+}
+.pill.blocked {
+  background: #ffe8e8;
+  color: #b42318;
+}
+.muted {
+  color: var(--muted);
+}
+.empty {
+  text-align: center;
+  padding: 32px;
+  color: var(--muted);
+}
+.hide-sm {
+}
 
 /* responsive */
 @media (max-width: 820px) {
-  .card { padding:16px; border-radius:16px; }
-  h1{ font-size:20px; }
+  .card {
+    padding: 16px;
+    border-radius: 16px;
+  }
+  h1 {
+    font-size: 20px;
+  }
 }
 @media (max-width: 640px) {
-  .card { padding:14px; border-radius:14px; }
-  h1{ font-size:18px; margin-bottom:6px; }
-
-  .toolbar{
-    display:grid;
+  .card {
+    padding: 14px;
+    border-radius: 14px;
+  }
+  h1 {
+    font-size: 18px;
+    margin-bottom: 6px;
+  }
+  .toolbar {
+    display: grid;
     grid-template-columns: 1fr 1fr;
-    gap:8px;
-    align-items:end;
+    gap: 8px;
+    align-items: end;
   }
-  .toolbar .btn{
-    height:42px;
+  .toolbar .btn {
+    height: 42px;
   }
-  .toolbar.blocks{
+  .toolbar.blocks {
     grid-template-columns: 1fr 1fr;
   }
-  .toolbar.blocks .btns{
+  .toolbar.blocks .btns {
     grid-column: 1 / -1;
   }
-
-  /* горизонтальний скрол таблиці */
-  .table-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
-  .table{ min-width: 760px; } /* не ламаємо колонки */
-  .hide-sm{ display:none; }
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .table {
+    min-width: 760px;
+  }
+  .hide-sm {
+    display: none;
+  }
 }
 /* ===== Desktop fit tweaks ===== */
-.table { table-layout: fixed; }                    /* стабільні ширини колонок */
-.table th, .table td {
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+.table {
+  table-layout: fixed;
 }
-
-/* Орієнтовні ширини, щоб усе влізло на 1200–1400px */
-.col-date   { width: 110px; }
-.col-time   { width: 80px; }
-.col-service{ width: 22%;  }  /* трошки простору під назву послуги */
-.col-dur    { width: 70px; }
-.col-client { width: 16%;  }
-.col-phone  { width: 140px; }
-.col-status { width: 110px; }
-.col-pay    { width: 220px; } /* довгі paymentId підрізаються елліпсисом */
-
-/* Трохи компактніші кнопки на десктопі */
+.table th,
+.table td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.col-date {
+  width: 110px;
+}
+.col-time {
+  width: 80px;
+}
+.col-service {
+  width: 22%;
+}
+.col-dur {
+  width: 70px;
+}
+.col-client {
+  width: 16%;
+}
+.col-phone {
+  width: 140px;
+}
+.col-status {
+  width: 110px;
+}
+.col-pay {
+  width: 220px;
+}
 .toolbar button,
 .toolbar .primary,
 .toolbar .danger {
@@ -174,40 +270,63 @@ input:focus, select:focus{
   line-height: 1;
   border-radius: 12px;
 }
-
-/* Піджимаємо відступи заголовків/рядків, щоб зменшити висоту */
-.table th { padding-top: 8px; padding-bottom: 8px; }
-.table td { padding-top: 8px; padding-bottom: 8px; }
-
-/* Коли ширина екрану менша — ще трохи стискаємо сервіс/пеймєнт */
+.table th {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+.table td {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
 @media (max-width: 1280px) {
-  .col-service { width: 20%; }
-  .col-pay     { width: 180px; }
+  .col-service {
+    width: 20%;
+  }
+  .col-pay {
+    width: 180px;
+  }
 }
-
-/* Якщо зовсім тісно (≤1120px), сховай Pay-колонку — в тебе вже є .hide-sm */
 @media (max-width: 1120px) {
-  .col-pay { display: none; }
+  .col-pay {
+    display: none;
+  }
 }
-/* Колонки: фіксована розкладка + еліпсис — у тебе це вже є */
-.table { table-layout: fixed; }
-.table th, .table td { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-/* Ширини (залишаються як були) + нова колонка Act */
-.col-act { width: 104px; }
-.table td.col-act { text-align: right; }
-.table td.col-act .btn { height: 32px; padding: 0 12px; font-size: 13px; }
-
-/* Кнопочки для дій */
-.btn { border: 1px solid var(--border); border-radius: 10px; background:#fff; }
-.btn--light { background:#fff; }
+.table {
+  table-layout: fixed;
+}
+.table th,
+.table td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.col-act {
+  width: 104px;
+}
+.table td.col-act {
+  text-align: right;
+}
+.table td.col-act .btn {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+.btn {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+}
+.btn--light {
+  background: #fff;
+}
 .btn--danger {
-  color:#fff; border-color: transparent;
+  color: #fff;
+  border-color: transparent;
   background: linear-gradient(180deg, #ff6aa0 0%, #ff4280 100%);
-  box-shadow: 0 6px 18px rgba(255, 66, 128, .25);
+  box-shadow: 0 6px 18px rgba(255, 66, 128, 0.25);
 }
-
-/* На тісних десктопах ховаємо Pay, але НЕ Act */
 @media (max-width: 1120px) {
-  .col-pay { display:none; }
+  .col-pay {
+    display: none;
+  }
 }

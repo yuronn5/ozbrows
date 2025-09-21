@@ -7,14 +7,13 @@ export type Service = {
   id: string;
   title: string;
   price: string;
-  duration: string; // "(1 h 30 min)" або "(25 min)" — як у твоїх даних
+  duration: string;
   category: string;
 };
 
-/** parse "(1 h 30 min)" | "1h" | "45m" | "90" → minutes (fallback 45) */
 function parseDurationToMin(input: string) {
   if (!input) return 45;
-  const str = input.trim().toLowerCase().replace(/[()]/g, ""); // прибираємо дужки
+  const str = input.trim().toLowerCase().replace(/[()]/g, "");
   const hMatch = str.match(/(\d+)\s*(h|hr|hrs|hour|hours)\b/);
   const mMatch = str.match(/(\d+)\s*(m|min|mins|minute|minutes)\b/);
 
@@ -22,7 +21,6 @@ function parseDurationToMin(input: string) {
   if (hMatch) total += Number(hMatch[1]) * 60;
   if (mMatch) total += Number(mMatch[1]);
 
-  // Якщо просто число — вважаємо хвилинами (напр. "90")
   if (!hMatch && !mMatch) {
     const num = Number(str.replace(/[^\d]/g, ""));
     if (Number.isFinite(num) && num > 0) total = num;
@@ -94,10 +92,8 @@ export default function PricesModal({
                         const durationMin = parseDurationToMin(s.duration);
                         const payload = { ...s, durationMin };
 
-                        // 1) віддаємо наверх
                         onSelect(payload);
 
-                        // 2) зберігаємо в localStorage (щоб букінг знав, навіть якщо подія не зловиться)
                         try {
                           localStorage.setItem(
                             "selectedService",
@@ -109,7 +105,6 @@ export default function PricesModal({
                           );
                         } catch {}
 
-                        // 3) кидаємо подію для live-оновлення сторінки букінгу
                         if (typeof window !== "undefined") {
                           window.dispatchEvent(
                             new CustomEvent("service:select", {
@@ -122,7 +117,6 @@ export default function PricesModal({
                           );
                         }
 
-                        // 4) закриваємо модалку
                         onClose();
                       }}
                     >

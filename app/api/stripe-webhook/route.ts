@@ -30,14 +30,12 @@ const noCache: Record<string, string> = {
   Expires: "0",
 };
 
-/** Type guard: перевіряє, що об'єкт схожий на DayData */
 function isDayData(val: unknown): val is DayData {
   if (typeof val !== "object" || val === null) return false;
   const v = val as { blocked?: unknown; bookings?: unknown };
   return Array.isArray(v.blocked) && Array.isArray(v.bookings);
 }
 
-/** Обережне приведення сирих даних до DayData без any */
 function coerceToDayData(val: unknown): DayData {
   if (!isDayData(val)) return { blocked: [], bookings: [] };
 

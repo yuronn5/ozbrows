@@ -24,8 +24,7 @@ type DayData = { blocked: string[]; bookings: Booking[] };
 
 const WORK_START = 8, WORK_END = 20;
 const SLOT_MINUTES = 15, SERVICE_DURATION = 45;
-// через стільки хвилин неплатні «утримання» приберуться автоматично
-const HOLD_TTL_MIN = 20; // 0 = вимкнути автоприбирання
+const HOLD_TTL_MIN = 20;
 
 const noCache: Record<string, string> = {
   "Cache-Control": "no-store, no-cache, must-revalidate",
@@ -160,7 +159,6 @@ export async function POST(req: Request) {
     };
 
     day.bookings = [...(day.bookings ?? []), booking];
-    // НЕ додаємо span у day.blocked — конфлікти й так рахуються по bookings.
 
     await setDay(day);
 

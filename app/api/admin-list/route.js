@@ -8,7 +8,7 @@ const noCache = {
   Vary: "x-admin-key",
 };
 
-const STEP = 15; // хв: 15-хв крок
+const STEP = 15;
 
 function isDateStr(s) {
   return /^\d{4}-\d{2}-\d{2}$/.test(s);
@@ -21,7 +21,7 @@ function minutesToTime(min) {
   const h = Math.floor(min / 60), m = min % 60;
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
-/** усі 15-хв точки інтервалу від часу start на duration хв (включно зі стартом) */
+
 function spanTimes(startStr, durationMin, step = STEP) {
   const start = parseTime(startStr);
   const end = start + Math.max(0, Number(durationMin) || 0);
@@ -32,7 +32,7 @@ function spanTimes(startStr, durationMin, step = STEP) {
   }
   return out;
 }
-/** з масиву точок виду ["09:00","09:15",...] робить консолідовані інтервали */
+
 function consolidateBlocked(points, step = STEP) {
   const arr = Array.from(new Set(points)).sort((a, b) => parseTime(a) - parseTime(b));
   const blocks = [];
@@ -85,7 +85,6 @@ export async function GET(req) {
         const raw = await store.get(key, { type: "json" });
         const day = raw || { blocked: [], bookings: [] };
 
-        // 1) звичайні бронювання
         for (const b of day.bookings || []) {
           rows.push({
             date: key,
@@ -101,7 +100,6 @@ export async function GET(req) {
           });
         }
 
-        // 2) чисті адмін-блоки = blocked - усі інтервали бронювань
         const blockedSet = new Set(day.blocked || []);
         for (const b of day.bookings || []) {
           const pts = spanTimes(b.time, b?.durationMin ?? 45);

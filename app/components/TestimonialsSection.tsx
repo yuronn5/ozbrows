@@ -1,4 +1,3 @@
-/* ==== TESTIMONIALS with centered slide, peek & autoplay ==== */
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -6,22 +5,19 @@ import { useEffect, useRef, useState } from "react";
 export default function TestimonialsSection() {
   const items = [
     {
-      text:
-        "Perfect shape and color. Very attentive approach, the result lasts long!",
+      text: "Perfect shape and color. Very attentive approach, the result lasts long!",
       name: "Maria K.",
       role: "Client",
       stars: 5,
     },
     {
-      text:
-        "Lamination changed my mornings — no styling needed. Highly recommend OzBrows!",
+      text: "Lamination changed my mornings — no styling needed. Highly recommend OzBrows!",
       name: "Olena V.",
       role: "Client",
       stars: 5,
     },
     {
-      text:
-        "Neat, symmetric, and natural. The best brow experience I’ve had so far.",
+      text: "Neat, symmetric, and natural. The best brow experience I’ve had so far.",
       name: "Anna P.",
       role: "Client",
       stars: 5,
@@ -47,7 +43,6 @@ export default function TestimonialsSection() {
 
   const next = () => scrollToIndex((i + 1) % items.length);
 
-  // старт/стоп автоплею
   const startAutoplay = () => {
     stopAutoplay();
     timerRef.current = window.setInterval(() => {
@@ -68,14 +63,12 @@ export default function TestimonialsSection() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // автоплей: перезапуск при зміні активного індексу
   useEffect(() => {
     startAutoplay();
     return stopAutoplay;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [i]);
 
-  // пауза при взаємодії і при неактивній вкладці
   useEffect(() => {
     const vp = viewportRef.current;
     if (!vp) return;
@@ -87,7 +80,6 @@ export default function TestimonialsSection() {
     vp.addEventListener("mouseleave", resume);
     vp.addEventListener("touchstart", pause, { passive: true });
     vp.addEventListener("touchend", () => {
-      // маленька затримка, щоб не одразу рушало
       setTimeout(resume, 600);
     });
 
@@ -105,7 +97,6 @@ export default function TestimonialsSection() {
     };
   }, []);
 
-  // підсвічуємо активну крапку при ручному скролі
   useEffect(() => {
     const vp = viewportRef.current;
     if (!vp) return;
@@ -239,8 +230,12 @@ export default function TestimonialsSection() {
           padding: 0 7%;
           margin: 8px 0;
         }
-        .viewport::-webkit-scrollbar { display: none; }
-        .viewport { scrollbar-width: none; }
+        .viewport::-webkit-scrollbar {
+          display: none;
+        }
+        .viewport {
+          scrollbar-width: none;
+        }
 
         .slide {
           scroll-snap-align: center;
@@ -249,32 +244,60 @@ export default function TestimonialsSection() {
           opacity: 0.88;
         }
         @media (min-width: 980px) {
-          .slide { flex-basis: 66%; }
+          .slide {
+            flex-basis: 66%;
+          }
         }
         .slide.is-active {
           transform: scale(1);
           opacity: 1;
         }
 
-        .card-in { margin: 0; }
+        .card-in {
+          margin: 0;
+        }
         .bubble {
           position: relative;
           background: #fff;
-          border: 1px solid rgba(0,0,0,0.06);
+          border: 1px solid rgba(0, 0, 0, 0.06);
           border-radius: 20px;
-          box-shadow: 0 12px 28px rgba(0,0,0,0.06);
+          box-shadow: 0 12px 28px rgba(0, 0, 0, 0.06);
           padding: clamp(16px, 2vw, 22px) clamp(16px, 2.2vw, 26px);
         }
-        .stars { margin-bottom: 10px; color: #caa03f; letter-spacing: 2px; font-size: 18px; }
-        .bubble p { margin: 0; color: #5f564d; line-height: 1.55; font-size: clamp(16px, 1.5vw, 20px); }
-        .tail {
-          position: absolute; left: 36px; bottom: -12px; width: 0; height: 0;
-          border-left: 10px solid transparent; border-right: 10px solid transparent;
-          border-top: 12px solid #fff; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.06));
+        .stars {
+          margin-bottom: 10px;
+          color: #caa03f;
+          letter-spacing: 2px;
+          font-size: 18px;
         }
-        .person { margin-top: 18px; padding-left: 6px; }
-        .person .name { font-weight: 700; }
-        .person .role { color: #7b7269; font-size: 14px; }
+        .bubble p {
+          margin: 0;
+          color: #5f564d;
+          line-height: 1.55;
+          font-size: clamp(16px, 1.5vw, 20px);
+        }
+        .tail {
+          position: absolute;
+          left: 36px;
+          bottom: -12px;
+          width: 0;
+          height: 0;
+          border-left: 10px solid transparent;
+          border-right: 10px solid transparent;
+          border-top: 12px solid #fff;
+          filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.06));
+        }
+        .person {
+          margin-top: 18px;
+          padding-left: 6px;
+        }
+        .person .name {
+          font-weight: 700;
+        }
+        .person .role {
+          color: #7b7269;
+          font-size: 14px;
+        }
 
         .dots {
           display: flex;
@@ -286,7 +309,7 @@ export default function TestimonialsSection() {
           width: 8px;
           height: 8px;
           border-radius: 999px;
-          background: rgba(0,0,0,0.18);
+          background: rgba(0, 0, 0, 0.18);
           border: 0;
           padding: 0;
           cursor: pointer;

@@ -1,4 +1,4 @@
-// components/ContactsCard.tsx (або прямо у page.tsx)
+
 "use client";
 import { MapPin, Phone, Instagram } from "lucide-react";
 

@@ -108,13 +108,11 @@ export default function Page() {
   const closePricesModal = () => setShowPrices(false);
 
   const handleSelectService = (s: Service) => {
-    // закриваємо модал і переходимо з query ?service=
     closePricesModal();
     router.push(`/booking?service=${encodeURIComponent(s.id)}`);
   };
 
   useEffect(() => {
-    // Smooth-scroll for anchors
     document
       .querySelectorAll<HTMLAnchorElement>('a[href^="#"]')
       .forEach((a) => {
@@ -139,7 +137,7 @@ export default function Page() {
     });
 
     // FAQ accordion
-    // FAQ accordion (з плавною анімацією)
+
     document
       .querySelectorAll<HTMLButtonElement>(".faq-item .faq-q")
       .forEach((btn) => {
@@ -147,7 +145,6 @@ export default function Page() {
         const panel = item?.querySelector<HTMLElement>(".faq-a");
         if (!item || !panel) return;
 
-        // Початковий стан
         panel.style.maxHeight = "0px";
         btn.setAttribute("aria-expanded", "false");
 
@@ -156,16 +153,14 @@ export default function Page() {
           btn.setAttribute("aria-expanded", isOpen ? "true" : "false");
 
           if (isOpen) {
-            // спочатку скидка, щоб браузер переміряв висоту
             panel.style.maxHeight = "0px";
-            // на наступний кадр ставимо реальну висоту
+
             requestAnimationFrame(() => {
               panel.style.maxHeight = panel.scrollHeight + "px";
             });
           } else {
-            // захлопуємо
             panel.style.maxHeight = panel.scrollHeight + "px";
-            // і одразу анімуємо до 0 (трюк для плавності)
+
             requestAnimationFrame(() => {
               panel.style.maxHeight = "0px";
             });
@@ -173,7 +168,6 @@ export default function Page() {
         });
       });
 
-    // Якщо контент FAQ може змінюватися динамічно, оновлюй max-height при ресайзі:
     const ro = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const panel = entry.target as HTMLElement;
@@ -343,19 +337,9 @@ export default function Page() {
       {/* PRICING + GALLERY */}
       <section className="container pricing">
         <div className="grid-1">
-          {/* <div id="pricing" className="card reveal" style={{ padding: 22 }}>
-            <h2>Pricing</h2>
-            <div className="price-row"><span>Brow Shaping</span><span className="price">$30</span></div>
-            <div className="price-row"><span>Brow Tinting</span><span className="price">$40</span></div>
-            <div className="price-row"><span>Brow Lamination</span><span className="price">$50</span></div>
-          </div> */}
           <div id="gallery" className="card reveal" style={{ padding: 22 }}>
             <h2 style={{ textAlign: "center" }}>Gallery</h2>
             <div className="gallery">
-              {/* <img src="/images/IMG_4587.jpg" alt="Before and after brows — close-up view" />
-              <img src="/images/IMG_4320.jpg" alt="Well-groomed brows after the procedure" />
-              <img src="/images/IMG_5383.jpg" alt="Well-groomed brows after the procedure" />
-              <img src="/images/IMG_5617.jpg" alt="Well-groomed brows after the procedure" /> */}
               <Gallery />
             </div>
           </div>
@@ -474,20 +458,6 @@ export default function Page() {
                 services={services}
               />
             </div>
-
-            {/* <div className="stack">
-              <h2>Contacts</h2>
-              <div className="foot-card"><strong>Address</strong><br /><span>12 Example St, Kyiv</span></div>
-              <div className="foot-card"><strong>Phone</strong><br /><a href="tel:+380000000000">+380 00 000 00 00</a></div>
-              <div className="foot-card"><strong>Instagram</strong><br /><a href="https://instagram.com/ozbrows" target="_blank" rel="noopener">instagram.com/ozbrows</a></div>
-              <a className="btn" href="#" data-book-url="https://calendly.com/your-link">Open Booking Form</a>
-            </div> */}
-
-            {/* <div className="stack">
-              <h2>Online Booking</h2>
-              <p>Select a convenient time — confirmation will be sent via Direct or SMS.</p>
-              <a className="btn" href="#" data-book-url="https://calendly.com/your-link">Open Booking Form</a>
-            </div> */}
           </div>
         </div>
       </section>

@@ -13,7 +13,7 @@ type Row = {
   serviceTitle?: string;
   price?: string;
   durationMin?: number;
-  isBlock?: boolean; // для рядків-блоків
+  isBlock?: boolean;
 };
 
 const API_BASE = "/api";
