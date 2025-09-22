@@ -149,21 +149,29 @@ export default function Page() {
 
       {/* SERVICES */}
       <section id="services" className="container services">
-        <div className="grid-3">
+        <div className="grid-4">
           <article className="card reveal" style={{ padding: 20 }}>
             <div className="icon" aria-hidden="true">🍃</div>
-            <h3>Brow Shaping</h3>
-            <p>Custom shape that matches your face proportions, symmetry, and a soft natural look.</p>
+            <h3>Brows</h3>
+            <p><strong>Shaping</strong>: Custom shape that matches your face proportions, symmetry, and a soft natural look.
+              
+            </p>
+            <p><strong>Tinting</strong>: Selected shade to enhance density and add expressiveness for 3–4 weeks.</p>
           </article>
           <article className="card reveal" style={{ padding: 20 }}>
             <div className="icon" aria-hidden="true">💧</div>
-            <h3>Brow Tinting</h3>
-            <p>Selected shade to enhance density and add expressiveness for 3–4 weeks.</p>
+            <h3>Brow Lamination</h3>
+            <p>If you want your brows to be easier to style, with a lasting effect for up to two months, and you’d like them to look more groomed and have a beautiful shape, then brow lamination is the treatment for you.</p>
           </article>
           <article className="card reveal" style={{ padding: 20 }}>
             <div className="icon" aria-hidden="true">🌿</div>
-            <h3>Brow Lamination</h3>
-            <p>Long-lasting styling, glossy shine, and neat shape without gel for up to 6 weeks.</p>
+            <h3>Lash Lift</h3>
+            <p>If you want your lashes to look naturally lifted, with a long-lasting curl that holds for up to two months, and you’d like them to appear darker, shinier, and more groomed, then lash lamination is the perfect treatment for you.</p>
+          </article>
+          <article className="card reveal" style={{ padding: 20 }}>
+            <div className="icon" aria-hidden="true">💄</div>
+            <h3>Makeup</h3>
+            <p>If you have an important event and want to look confident and stunning, I’ll be happy to highlight your best features and carefully listen to your wishes to create the perfect makeup look for you.</p>
           </article>
         </div>
       </section>

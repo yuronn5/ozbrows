@@ -388,6 +388,11 @@ p {
   grid-template-columns: repeat(3, 1fr);
   gap: 18px;
 }
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
 .grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -562,7 +567,7 @@ section.contact {
   .stats {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-  .grid-3 {
+  .grid-3, .grid-4 {
     grid-template-columns: 1fr;
   }
   .grid-2 {
