@@ -5,12 +5,12 @@ import { createPortal } from "react-dom";
 import styles from "./gallery.module.css";
 
 const images = [
-  { src: "/images/IMG_4587.jpg", caption: "Корекція брів" },
-  { src: "/images/IMG_4320.jpg", caption: "Вечірній макіяж" },
-  { src: "/images/IMG_5383.jpg", caption: "Весільний макіяж" },
-  { src: "/images/IMG_5617.jpg", caption: "Ламінування вій" },
-  { src: "/images/IMG_9582.jpg", caption: "Денний макіяж" },
-  { src: "/images/IMG_7794.jpg", caption: "Брови + війки" },
+  { src: "/images/IMG_4587.jpg", caption: "Brow shaping" },
+  { src: "/images/IMG_4320.jpg", caption: "Evening makeup" },
+  { src: "/images/IMG_5383.jpg", caption: "Bridal makeup" },
+  { src: "/images/IMG_5617.jpg", caption: "Lash lamination" },
+  { src: "/images/IMG_9582.jpg", caption: "Day makeup" },
+  { src: "/images/IMG_7794.jpg", caption: "Brows & lashes" },
 ];
 
 export default function Gallery() {
