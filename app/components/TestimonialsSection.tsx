@@ -185,7 +185,13 @@ export default function TestimonialsSection() {
       </div>
 
       <style jsx>{`
+        /* layout */
         .testimonials__wrap {
+          --out-pad: clamp(
+            16px,
+            4vw,
+            22px
+          ); /* для мобільних негативних відступів */
           padding: clamp(18px, 2.5vw, 28px);
           border-radius: 26px;
           display: grid;
@@ -195,13 +201,24 @@ export default function TestimonialsSection() {
         section.testimonials {
           padding: 24px 0;
         }
+
         @media (min-width: 980px) {
           .testimonials__wrap {
             grid-template-columns: 1fr 1.2fr;
             align-items: start;
           }
         }
-
+        @media (max-width: 980px) {
+          #reviews {
+            overflow: hidden;
+            padding-right: 16px;
+            padding-left: 16px;
+          }
+          #reviews > .testimonials__wrap {
+            display: block;
+            width: 100%;
+          }
+        }
         .eyebrow {
           font-weight: 700;
           letter-spacing: 0.12em;
@@ -218,6 +235,7 @@ export default function TestimonialsSection() {
           max-width: 48ch;
         }
 
+        /* slider base */
         .slider {
           position: relative;
         }
@@ -225,25 +243,30 @@ export default function TestimonialsSection() {
           display: flex;
           gap: 18px;
           overflow-x: auto;
-          scroll-snap-type: x mandatory;
           -webkit-overflow-scrolling: touch;
-          padding: 0 7%;
-          margin: 8px 0;
+          scroll-snap-type: x mandatory;
+          /* Вийдемо за падінги картки і дамо повний екран на мобілці */
+          margin: 8px calc(-1 * var(--out-pad));
+          padding: 0 var(--out-pad);
+          scrollbar-width: none;
         }
         .viewport::-webkit-scrollbar {
           display: none;
         }
-        .viewport {
-          scrollbar-width: none;
-        }
 
+        /* слайд займає всю ширину на мобілці */
         .slide {
           scroll-snap-align: center;
-          flex: 0 0 88%;
+          flex: 0 0 100%;
           transition: transform 220ms ease, opacity 220ms ease;
-          opacity: 0.88;
+          opacity: 0.98;
         }
+        /* планшет/десктоп: як було */
         @media (min-width: 980px) {
+          .viewport {
+            margin: 8px 0;
+            padding: 0;
+          }
           .slide {
             flex-basis: 66%;
           }
@@ -253,6 +276,7 @@ export default function TestimonialsSection() {
           opacity: 1;
         }
 
+        /* card inside */
         .card-in {
           margin: 0;
         }
@@ -299,6 +323,7 @@ export default function TestimonialsSection() {
           font-size: 14px;
         }
 
+        /* dots */
         .dots {
           display: flex;
           gap: 8px;
