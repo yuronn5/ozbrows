@@ -5,20 +5,46 @@ import { useEffect, useRef, useState } from "react";
 export default function TestimonialsSection() {
   const items = [
     {
-      text: "Perfect shape and color. Very attentive approach, the result lasts long!",
-      name: "Maria K.",
+      text: "Ola is very sweet and professional. And her makeup skills are amazing! She was able to create the look I was going for perfectly. I am definitely booking her again in the future.",
+      name: "Jennifer K.",
+      role: "Client",
+      stars: 5,
+    },
+
+    {
+      text: "It was my first time getting a lash lift and tint and I felt super comfortable. I am so happy with the results and the welcoming environment",
+      name: "Rachel P.",
       role: "Client",
       stars: 5,
     },
     {
-      text: "Lamination changed my mornings — no styling needed. Highly recommend OzBrows!",
-      name: "Olena V.",
+      text: "I’ve been coming to Olha for several months now and she always does a fantastic job. Whether it’s a regular cleanup or a lamination, she makes sure to be both precise and respectful of what I prefer!",
+      name: "Victoria K.",
       role: "Client",
       stars: 5,
     },
     {
-      text: "Neat, symmetric, and natural. The best brow experience I’ve had so far.",
-      name: "Anna P.",
+      text: "Olha is amazing! This was my first experience with lamination. She took my sparse eyebrows and made them beautiful!",
+      name: "Sophia H.",
+      role: "Client",
+      stars: 5,
+    },
+    {
+      text: "Olha did a wonderful job , I got many compliments for my eyebrows , highly recommend seeing her for a new look !",
+      name: "Natalie N.",
+      role: "Client",
+      stars: 5,
+    },
+    {
+      text: "10/10 service, space, and person! Olha was so sweet and so great at what she does! Couldn’t have asked for a better service and experience. So happy! Highly recommend!!",
+      name: "Paige L.",
+      role: "Client",
+      stars: 5,
+    },
+
+    {
+      text: "Such a kind and talented specialist! Everything was done with care, attention to detail, and a warm attitude. I’m very happy with the result — truly and gladly recommend! 💕",
+      name: "Madison X.",
       role: "Client",
       stars: 5,
     },
@@ -204,9 +230,12 @@ export default function TestimonialsSection() {
 
         @media (min-width: 980px) {
           .testimonials__wrap {
-            grid-template-columns: 1fr 1.2fr;
-            align-items: start;
+            display: flex;
           }
+            .testimonials__wrap > div:first-child {
+            width: 55%;}
+            .testimonials__wrap > div:last-child {
+            width: 45%;}
         }
         @media (max-width: 980px) {
           #reviews {
