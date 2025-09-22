@@ -767,3 +767,92 @@ section.contact {
     height: 42px;
   }
 }
+/* ===== Full-bleed hero ===== */
+.hero--fullbleed{
+  position: relative;
+  /* «виламуємося» з центрового контейнера на всю ширину вʼюпорту */
+  margin-inline: calc(50% - 50vw);
+  width: 100vw;
+
+  min-height: min(74vh, 860px);
+  isolation: isolate;
+  overflow: clip;
+}
+
+.hero__bg{ position:absolute; inset:0; }
+.hero__img{
+  object-fit: cover;
+  object-position: 60% 40%; /* підкрути як треба */
+}
+.hero__overlay{
+  position:absolute; inset:0;
+  /* мʼякий градієнт зліва для читабельності тексту */
+  background:
+    radial-gradient(1200px 600px at 10% 50%, rgba(0,0,0,.55) 0 40%, transparent 70%),
+    linear-gradient(90deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,.25) 35%, rgba(0,0,0,0) 70%);
+  pointer-events:none;
+}
+
+/* Контент центруємо в сітці, але без коробочки */
+.hero__content{
+  position: relative;
+  z-index: 1;
+  color: #fff;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(32px, 6vw, 80px) clamp(16px, 5vw, 40px);
+  display:flex; flex-direction:column; gap: clamp(14px, 2.2vw, 22px);
+}
+
+.hero__eyebrow{
+  display:inline-flex; gap:8px; align-items:center;
+  padding: 8px 12px; border-radius: 999px;
+  font-weight: 600; font-size: .95rem; letter-spacing:.2px;
+  color:#fff; background: rgba(255,255,255,.12); backdrop-filter: blur(6px);
+  width: fit-content;
+}
+
+.hero__title{
+  margin:0;
+  font-size: clamp(36px, 6vw, 76px);
+  line-height: 1.05;
+  letter-spacing: -.02em;
+}
+.hero__title .accent{ color:#f7c7b0; } /* мʼякий теплий акцент */
+
+.hero__lead{
+  max-width: 58ch;
+  font-size: clamp(16px, 2vw, 20px);
+  line-height: 1.6;
+  color: rgba(255,255,255,.92);
+}
+
+.hero__cta{ display:flex; gap:12px; flex-wrap:wrap; }
+.btn.btn--ghost{
+  background: transparent;
+  color:#fff;
+  border:1px solid rgba(255,255,255,.45);
+}
+.btn.btn--ghost:hover{
+  background: rgba(255,255,255,.10);
+}
+
+.hero__stats{
+  display:flex; gap: clamp(18px, 4vw, 40px);
+  margin: clamp(6px, 1.5vw, 10px) 0 0;
+  padding:0; list-style:none;
+  flex-wrap:wrap;
+}
+.hero__stats li{ display:grid; gap: 4px; }
+.hero__stats b{ font-size: clamp(18px, 2.6vw, 28px); }
+.hero__stats span{ color: rgba(255,255,255,.8); font-size: 14px; }
+
+
+@media (max-width: 720px){
+  .hero__overlay{
+    background:
+      linear-gradient(180deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,.35) 40%, rgba(0,0,0,0) 70%),
+      linear-gradient(90deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 65%);
+  }
+  .hero__img{ object-position: 50% 25%; } 
+}
