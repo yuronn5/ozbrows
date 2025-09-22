@@ -82,7 +82,6 @@ export default function TestimonialsSection() {
     }
   };
 
-  // центруємо перший слайд
   useEffect(() => {
     const t = setTimeout(() => scrollToIndex(0), 0);
     return () => clearTimeout(t);
@@ -213,11 +212,7 @@ export default function TestimonialsSection() {
       <style jsx>{`
         /* layout */
         .testimonials__wrap {
-          --out-pad: clamp(
-            16px,
-            4vw,
-            22px
-          ); /* для мобільних негативних відступів */
+          --out-pad: clamp(16px, 4vw, 22px);
           padding: clamp(18px, 2.5vw, 28px);
           border-radius: 26px;
           display: grid;
@@ -232,10 +227,12 @@ export default function TestimonialsSection() {
           .testimonials__wrap {
             display: flex;
           }
-            .testimonials__wrap > div:first-child {
-            width: 55%;}
-            .testimonials__wrap > div:last-child {
-            width: 45%;}
+          .testimonials__wrap > div:first-child {
+            width: 55%;
+          }
+          .testimonials__wrap > div:last-child {
+            width: 45%;
+          }
         }
         @media (max-width: 980px) {
           #reviews {
@@ -274,7 +271,6 @@ export default function TestimonialsSection() {
           overflow-x: auto;
           -webkit-overflow-scrolling: touch;
           scroll-snap-type: x mandatory;
-          /* Вийдемо за падінги картки і дамо повний екран на мобілці */
           margin: 8px calc(-1 * var(--out-pad));
           padding: 0 var(--out-pad);
           scrollbar-width: none;
@@ -283,14 +279,14 @@ export default function TestimonialsSection() {
           display: none;
         }
 
-        /* слайд займає всю ширину на мобілці */
+
         .slide {
           scroll-snap-align: center;
           flex: 0 0 100%;
           transition: transform 220ms ease, opacity 220ms ease;
           opacity: 0.98;
         }
-        /* планшет/десктоп: як було */
+
         @media (min-width: 980px) {
           .viewport {
             margin: 8px 0;

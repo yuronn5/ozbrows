@@ -100,7 +100,7 @@ export default function Page() {
       <section id="home" className="hero hero--fullbleed">
         <div className="hero__bg" aria-hidden>
           <Image
-            src="/images/hero.png"  /* поклади своє фонове зображення */
+            src="/images/hero.png"  
             alt=""
             fill
             priority
@@ -218,7 +218,6 @@ export default function Page() {
               </div>
             </div>
 
-            {/* Contacts (іконки замість голих лінків) */}
             <div className="card reveal" style={{ padding: 22 }}>
               <h2>Contacts</h2>
 

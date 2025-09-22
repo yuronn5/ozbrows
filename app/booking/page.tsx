@@ -177,17 +177,19 @@ export default function BookingPage() {
     const cancelled = sp.get("cancelled");
 
     if (paid === "1") {
-      try { localStorage.removeItem("lastBooking"); } catch {}
+      try {
+        localStorage.removeItem("lastBooking");
+      } catch {}
       setFlash({
         kind: "success",
-        title: "Оплата успішна",
-        text: "Завдаток отримано. Бронювання підтверджено ✅",
+        title: "Payment successful",
+        text: "Deposit received. Booking confirmed. ✅",
       });
     } else if (cancelled === "1") {
       setFlash({
         kind: "info",
-        title: "Оплату скасовано",
-        text: "Можете спробувати ще раз. Слот ще може бути вільний.",
+        title: "Payment canceled",
+        text: "You can try again. The slot may still be available.",
       });
     }
     if (paid || cancelled) {
@@ -223,7 +225,7 @@ export default function BookingPage() {
       setBlocked([]);
       setBookings([]);
       setSlots(genSlots(SLOT_MINUTES, durationNow));
-      alert("Не вдалося завантажити зайнятість дня");
+      alert("Failed to load daily schedule");
     }
   };
 
@@ -287,7 +289,7 @@ export default function BookingPage() {
   async function resumePayFromStorage() {
     try {
       const raw = localStorage.getItem("lastBooking");
-      if (!raw) return alert("Немає незавершеної оплати");
+      if (!raw) return alert("No pending payment");
       const payload = JSON.parse(raw) as {
         bookingId: string;
         date: string;
@@ -309,18 +311,18 @@ export default function BookingPage() {
         throw new HttpError(j.error || "Checkout error", r.status);
       window.location.href = j.url;
     } catch (e) {
-      alert("Не вдалось продовжити оплату");
+      alert("Failed to proceed with the payment");
       console.error(e);
     }
   }
 
   async function handleConfirm() {
     if (!dateStr || !selected) {
-      alert("Оберіть час");
+      alert("Please select a time");
       return;
     }
     if (!name.trim() || !phone.trim()) {
-      alert("Вкажіть ім’я та телефон");
+      alert("Please enter your name and phone number");
       return;
     }
 
@@ -372,10 +374,10 @@ export default function BookingPage() {
       window.location.href = payJson.url;
     } catch (err) {
       if (err instanceof HttpError && err.status === 409) {
-        alert("Обраний проміжок вже зайнятий. Оновлюю...");
+        alert("The selected time slot is already taken. Refreshing...");
         if (dateStr) openForDate(dateStr);
       } else {
-        alert("Помилка. Спробуйте ще раз.");
+        alert("Error. Please try again.");
         console.error(err);
       }
     } finally {
@@ -398,7 +400,7 @@ export default function BookingPage() {
 
   const prettyDate =
     dateStr &&
-    new Date(`${dateStr}T12:00:00`).toLocaleDateString("uk-UA", {
+    new Date(`${dateStr}T12:00:00`).toLocaleDateString("en-US", {
       day: "2-digit",
       month: "long",
       year: "numeric",
@@ -408,9 +410,17 @@ export default function BookingPage() {
     <>
       {/* Toast (mobile-first) */}
       {flash && (
-        <div className={`toast toast--${flash.kind}`} role="alert" aria-live="polite">
+        <div
+          className={`toast toast--${flash.kind}`}
+          role="alert"
+          aria-live="polite"
+        >
           <div className="toast__icon" aria-hidden>
-            {flash.kind === "success" ? "✅" : flash.kind === "error" ? "⛔️" : "ℹ️"}
+            {flash.kind === "success"
+              ? "✅"
+              : flash.kind === "error"
+              ? "⛔️"
+              : "ℹ️"}
           </div>
           <div className="toast__body">
             <div className="toast__title">{flash.title}</div>
@@ -422,7 +432,11 @@ export default function BookingPage() {
               Pay now
             </button>
           ) : (
-            <button className="toast__close" aria-label="Close" onClick={() => setFlash(null)}>
+            <button
+              className="toast__close"
+              aria-label="Close"
+              onClick={() => setFlash(null)}
+            >
               ✕
             </button>
           )}
@@ -450,14 +464,22 @@ export default function BookingPage() {
         </div>
 
         <div className="booking__wrap">
-          <div className="booking__card" aria-label="Calendar for choosing a date">
+          <div
+            className="booking__card"
+            aria-label="Calendar for choosing a date"
+          >
             <div ref={calRef} />
           </div>
         </div>
 
         {/* Modal */}
         {dateStr && (
-          <div className="modal open" onClick={onModalBgClick} aria-modal="true" role="dialog">
+          <div
+            className="modal open"
+            onClick={onModalBgClick}
+            aria-modal="true"
+            role="dialog"
+          >
             <div className="sheet" role="document">
               {/* HEADER */}
               <div className="sheet__header">
@@ -468,7 +490,8 @@ export default function BookingPage() {
                   <h3 className="sheet__title">Choose a time</h3>
                   <div className="sheet__sub">
                     {prettyDate}
-                    <span className="dot">•</span> Working hours: <b>08:00–20:00</b>
+                    <span className="dot">•</span> Working hours:{" "}
+                    <b>08:00–20:00</b>
                     <span className="dot">•</span> <b>{durationNow}m</b>
                   </div>
                 </div>
@@ -476,16 +499,23 @@ export default function BookingPage() {
 
               {/* SCROLLABLE BODY */}
               <div className="sheet__body">
-                <div className="slots" role="listbox" aria-label="Available times">
+                <div
+                  className="slots"
+                  role="listbox"
+                  aria-label="Available times"
+                >
                   {slots.map((t) => {
-                    const disabled = isBlocked(t) || !fitsFrom(t) || overflows(t);
+                    const disabled =
+                      isBlocked(t) || !fitsFrom(t) || overflows(t);
                     const selectedNow = selected === t;
                     return (
                       <button
                         key={t}
                         role="option"
                         aria-selected={selectedNow}
-                        className={`slot${selectedNow ? " selected" : ""}${disabled ? " disabled" : ""}`}
+                        className={`slot${selectedNow ? " selected" : ""}${
+                          disabled ? " disabled" : ""
+                        }`}
                         onClick={() => !disabled && setSelected(t)}
                         disabled={disabled}
                       >
@@ -499,22 +529,21 @@ export default function BookingPage() {
                 <div className="form">
                   <div>
                     <label>
-                      Ім’я
+                      Name
                       <input
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        placeholder="Ім’я"
+                        placeholder="Name"
                         inputMode="text"
                       />
                     </label>
                   </div>
                   <div>
                     <label>
-                      Телефон
+                      Phone
                       <input
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
-                        placeholder="+380..."
                         inputMode="tel"
                       />
                     </label>
@@ -544,7 +573,10 @@ export default function BookingPage() {
 
               {/* STICKY FOOTER */}
               <div className="sheet__footer">
-                <button className="btn btn--ghost" onClick={() => setDateStr(null)}>
+                <button
+                  className="btn btn--ghost"
+                  onClick={() => setDateStr(null)}
+                >
                   Close
                 </button>
                 <button

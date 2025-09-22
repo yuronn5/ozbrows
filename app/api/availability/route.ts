@@ -42,7 +42,7 @@ export async function GET(req: Request) {
 
     const safeBookings: Booking[] = isAdmin
       ? day.bookings ?? []
-      : (day.bookings ?? []).map((b) => ({ time: b.time, name: "Зайнято", durationMin: b.durationMin ?? 45 }));
+      : (day.bookings ?? []).map((b) => ({ time: b.time, name: "Booked", durationMin: b.durationMin ?? 45 }));
 
     return new NextResponse(JSON.stringify({ blocked: day.blocked ?? [], bookings: safeBookings }), {
       status: 200,

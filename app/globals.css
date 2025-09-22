@@ -775,7 +775,6 @@ section.contact {
 /* ===== Full-bleed hero ===== */
 .hero--fullbleed{
   position: relative;
-  /* «виламуємося» з центрового контейнера на всю ширину вʼюпорту */
   margin-inline: calc(50% - 50vw);
   width: 100vw;
 
@@ -787,18 +786,16 @@ section.contact {
 .hero__bg{ position:absolute; inset:0; }
 .hero__img{
   object-fit: cover;
-  object-position: 60% 40%; /* підкрути як треба */
+  object-position: 60% 40%;
 }
 .hero__overlay{
   position:absolute; inset:0;
-  /* мʼякий градієнт зліва для читабельності тексту */
   background:
     radial-gradient(1200px 600px at 10% 50%, rgba(0,0,0,.55) 0 40%, transparent 70%),
     linear-gradient(90deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,.25) 35%, rgba(0,0,0,0) 70%);
   pointer-events:none;
 }
 
-/* Контент центруємо в сітці, але без коробочки */
 .hero__content{
   position: relative;
   z-index: 1;
@@ -823,7 +820,7 @@ section.contact {
   line-height: 1.05;
   letter-spacing: -.02em;
 }
-.hero__title .accent{ color:#f7c7b0; } /* мʼякий теплий акцент */
+.hero__title .accent{ color:#f7c7b0; }
 
 .hero__lead{
   max-width: 58ch;

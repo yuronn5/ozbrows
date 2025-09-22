@@ -1,5 +1,5 @@
 export async function notifyTelegram(text: string) {
-  // Працює лише на проді
+
   if (process.env.NODE_ENV !== "production") {
     console.log("🔔 [DEV] notifyTelegram skipped:", text);
     return;

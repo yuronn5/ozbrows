@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
 import "./booking.css";
 
-
 export const metadata: Metadata = {
-  title: "Календар запису",
-  description: "Онлайн-запис до майстра OzBrows.",
+  title: "Booking Calendar",
+  description: "Online appointment scheduling with OzBrows.",
 };
-
 export default function BookingLayout({
   children,
 }: {
