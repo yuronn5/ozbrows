@@ -5,12 +5,22 @@ import { createPortal } from "react-dom";
 import styles from "./gallery.module.css";
 
 const images = [
-  { src: "/images/IMG_4587.jpg", caption: "Brow shaping" },
-  { src: "/images/IMG_4320.jpg", caption: "Evening makeup" },
-  { src: "/images/IMG_5383.jpg", caption: "Bridal makeup" },
-  { src: "/images/IMG_5617.jpg", caption: "Lash lamination" },
-  { src: "/images/IMG_9582.jpg", caption: "Day makeup" },
-  { src: "/images/IMG_7794.jpg", caption: "Brows & lashes" },
+  { src: "/images/IMG_4587.jpg", caption: "Makeup" },
+  { src: "/images/IMG_4320.jpg", caption: "Brows" },
+  { src: "/images/IMG_5383.jpg", caption: "Brows" },
+  { src: "/images/IMG_5617.jpg", caption: "Makeup" },
+  { src: "/images/IMG_9582.jpg", caption: "Brows" },
+  { src: "/images/IMG_7794.jpg", caption: "Brows" },
+  { src: "/images/makeup1.jpeg", caption: "Makeup" },
+  { src: "/images/makeup2.jpeg", caption: "Makeup" },
+  { src: "/images/makeup3.jpeg", caption: "Makeup" },
+  { src: "/images/makeup4.jpeg", caption: "Makeup" },
+  { src: "/images/makeup5.jpeg", caption: "Makeup" },
+  { src: "/images/makeup6.jpeg", caption: "Makeup" },
+  { src: "/images/makeup7.jpeg", caption: "Makeup" },
+  { src: "/images/brows1.jpeg", caption: "Brows" },
+  { src: "/images/brows2.jpeg", caption: "Brows" },
+  { src: "/images/brows3.png", caption: "Brows" },
 ];
 
 export default function Gallery() {
