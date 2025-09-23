@@ -11,7 +11,7 @@ const images = [
   { src: "/images/IMG_5617.jpg", caption: "Makeup" },
   { src: "/images/IMG_9582.jpg", caption: "Brows" },
   { src: "/images/IMG_7794.jpg", caption: "Brows" },
-  { src: "/images/makeup1.jpeg", caption: "Makeup" },
+  { src: "/images/makeup1.jpg", caption: "Makeup" },
   { src: "/images/makeup2.jpeg", caption: "Makeup" },
   { src: "/images/makeup3.jpeg", caption: "Makeup" },
   { src: "/images/makeup4.jpeg", caption: "Makeup" },
