@@ -71,7 +71,30 @@ function rangeTimes(
     if (t >= WORK_START * 60 && t < WORK_END * 60) out.push(minutesToTime(t));
   return out;
 }
+const UA_LETTERS = /[A-Za-zА-Яа-яЁёІіЇїЄєҐґ]/;
+function sanitizeNameInput(s: string) {
+  return s
+    .normalize("NFC")
+    .replace(/[0-9]/g, "")
+    .replace(/\s{2,}/g, " ")
+    .trimStart()
+    .slice(0, 60);
+}
+function nameIsValid(name: string) {
+  const t = name.trim();
+  return t.length >= 2 && UA_LETTERS.test(t);
+}
 
+function sanitizePhoneInput(s: string) {
+  let out = s.replace(/[A-Za-zА-Яа-яЁёІіЇїЄєҐґ]/g, "");
+  out = out.replace(/[^0-9+()\-\s]/g, "");
+  out = out.replace(/(?!^)\+/g, "");
+  return out.slice(0, 25);
+}
+function phoneIsValid(phone: string) {
+  const digits = phone.replace(/\D/g, "");
+  return digits.length >= 7 && digits.length <= 15;
+}
 /* ---------- data helpers ---------- */
 async function loadDay(dateStr: string): Promise<DayData> {
   const url = new URL(`${API_BASE}/availability`, location.origin);
@@ -121,12 +144,17 @@ export default function BookingPage() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
+  const [nameTouched, setNameTouched] = useState(false);
+  const [phoneTouched, setPhoneTouched] = useState(false);
 
   const [selectedService, setSelectedService] = useState<null | {
     title?: string;
     price?: string;
     durationMin: number;
   }>(null);
+
+  const canPay =
+    !!selected && nameIsValid(name) && phoneIsValid(phone) && !busy;
 
   // ===== Toast state (mobile-first) =====
   const [flash, setFlash] = useState<null | {
@@ -321,8 +349,12 @@ export default function BookingPage() {
       alert("Please select a time");
       return;
     }
-    if (!name.trim() || !phone.trim()) {
-      alert("Please enter your name and phone number");
+    if (!nameIsValid(name)) {
+      alert("Please enter a valid name (letters only, at least 2).");
+      return;
+    }
+    if (!phoneIsValid(phone)) {
+      alert("Please enter a valid phone (7–15 digits).");
       return;
     }
 
@@ -532,21 +564,40 @@ export default function BookingPage() {
                       Name
                       <input
                         value={name}
-                        onChange={(e) => setName(e.target.value)}
+                        onChange={(e) =>
+                          setName(sanitizeNameInput(e.target.value))
+                        }
+                        onBlur={() => setNameTouched(true)}
                         placeholder="Name"
                         inputMode="text"
+                        aria-invalid={nameTouched && !nameIsValid(name)}
                       />
                     </label>
+                    {nameTouched && !nameIsValid(name) && (
+                      <small style={{ color: "#b42318" }}>
+                        Only letters, at least 2 characters.
+                      </small>
+                    )}
                   </div>
                   <div>
                     <label>
                       Phone
                       <input
                         value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
+                        onChange={(e) =>
+                          setPhone(sanitizePhoneInput(e.target.value))
+                        }
+                        onBlur={() => setPhoneTouched(true)}
                         inputMode="tel"
+                        placeholder="+1 (555) 123-4567"
+                        aria-invalid={phoneTouched && !phoneIsValid(phone)}
                       />
                     </label>
+                    {phoneTouched && !phoneIsValid(phone) && (
+                      <small style={{ color: "#b42318" }}>
+                        7–15 digits. Letters are not allowed.
+                      </small>
+                    )}
                   </div>
                 </div>
 
@@ -573,16 +624,13 @@ export default function BookingPage() {
 
               {/* STICKY FOOTER */}
               <div className="sheet__footer">
-                <button
-                  className="btn btn--ghost"
-                  onClick={() => setDateStr(null)}
-                >
+                <button className="btn" onClick={() => setDateStr(null)}>
                   Close
                 </button>
                 <button
                   className="btn primary"
                   onClick={handleConfirm}
-                  disabled={busy || !selected || !name || !phone}
+                  disabled={!canPay}
                 >
                   {busy ? "Processing…" : "Pay deposit"}
                 </button>

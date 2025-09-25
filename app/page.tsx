@@ -208,8 +208,7 @@ export default function Page() {
           </h1>
 
           <p className="hero__lead">
-            Professional shaping, lamination, and tinting. Precise form,
-            long-lasting results, and gentle care.
+            Professional shaping, lamination, and tinting for brows and lashes. Perfect form, long-lasting results, and gentle care. Makeup that enhances your natural beauty and stays fresh all day.
           </p>
 
           <div className="hero__cta">
