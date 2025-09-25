@@ -234,9 +234,8 @@ select:focus {
 }
 .table th,
 .table td {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: scroll;
+  width: 100%;
 }
 .col-date {
   width: 110px;
