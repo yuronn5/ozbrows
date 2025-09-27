@@ -232,10 +232,12 @@ select:focus {
 .table {
   table-layout: fixed;
 }
-.table th,
-.table td {
+table.table th,
+table.table td {
   overflow: scroll;
   width: 100%;
+      text-overflow: unset;
+    white-space: unset;
 }
 .col-date {
   width: 110px;
