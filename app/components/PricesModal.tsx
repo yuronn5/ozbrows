@@ -6,24 +6,31 @@ import { createPortal } from "react-dom";
 export type Service = {
   id: string;
   title: string;
-  price: string;
-  duration: string;
+  price: string;     // e.g. "$25"
+  duration: string;  // e.g. "1 h 30 min" | "40 min" | "1 h"
   category: string;
 };
 
+/** Normalize a price string like "$25" or "25 USD" to cents (2500). Returns null if can't parse. */
+function priceStrToCents(price: string): number | null {
+  if (!price) return null;
+  const num = parseFloat(price.replace(/[^\d.]/g, ""));
+  if (!Number.isFinite(num)) return null;
+  return Math.round(num * 100);
+}
+
+/** Parse "1 h 30 min", "40 min", "1 h", "(1 h 30 min)" etc. to minutes; fallback 45. */
 function parseDurationToMin(input: string) {
   if (!input) return 45;
   const str = input.trim().toLowerCase().replace(/[()]/g, "");
-  const hMatch = str.match(/(\d+)\s*(h|hr|hrs|hour|hours)\b/);
-  const mMatch = str.match(/(\d+)\s*(m|min|mins|minute|minutes)\b/);
-
+  const h = /(\d+)\s*(h|hr|hrs|hour|hours)\b/.exec(str)?.[1];
+  const m = /(\d+)\s*(m|min|mins|minute|minutes)\b/.exec(str)?.[1];
   let total = 0;
-  if (hMatch) total += Number(hMatch[1]) * 60;
-  if (mMatch) total += Number(mMatch[1]);
-
-  if (!hMatch && !mMatch) {
-    const num = Number(str.replace(/[^\d]/g, ""));
-    if (Number.isFinite(num) && num > 0) total = num;
+  if (h) total += Number(h) * 60;
+  if (m) total += Number(m);
+  if (!h && !m) {
+    const onlyNum = Number(str.replace(/[^\d]/g, ""));
+    if (Number.isFinite(onlyNum) && onlyNum > 0) total = onlyNum;
   }
   return total > 0 ? total : 45;
 }
@@ -41,6 +48,7 @@ export default function PricesModal({
   services: Service[];
   headline?: string;
 }) {
+  // lock scroll + ESC close
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
@@ -62,6 +70,7 @@ export default function PricesModal({
       className="pm-backdrop"
       role="dialog"
       aria-modal="true"
+      aria-label={headline}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
@@ -84,49 +93,57 @@ export default function PricesModal({
               <div className="pm-list">
                 {services
                   .filter((s) => s.category === cat)
-                  .map((s) => (
-                    <button
-                      key={s.id}
-                      className="pm-row"
-                      onClick={() => {
-                        const durationMin = parseDurationToMin(s.duration);
-                        const payload = { ...s, durationMin };
+                  .map((s) => {
+                    const durationMin = parseDurationToMin(s.duration);
+                    const priceCents = priceStrToCents(s.price);
 
-                        onSelect(payload);
+                    return (
+                      <button
+                        key={s.id}
+                        className="pm-row"
+                        aria-label={`${s.title}, ${s.duration}, ${s.price}`}
+                        onClick={() => {
+                          const payload = { ...s, durationMin };
+                          // Колбек у батьківський компонент
+                          onSelect(payload);
 
-                        try {
-                          localStorage.setItem(
-                            "selectedService",
-                            JSON.stringify({
-                              title: s.title,
-                              price: s.price,
-                              durationMin,
-                            })
-                          );
-                        } catch {}
+                          // Persist + broadcast
+                          const persist = {
+                            id: s.id,
+                            title: s.title,
+                            price: s.price,
+                            durationMin,
+                          };
+                          try {
+                            localStorage.setItem(
+                              "selectedService",
+                              JSON.stringify(persist)
+                            );
+                          } catch {}
 
-                        if (typeof window !== "undefined") {
-                          window.dispatchEvent(
-                            new CustomEvent("service:select", {
-                              detail: {
-                                title: s.title,
-                                price: s.price,
-                                durationMin,
-                              },
-                            })
-                          );
-                        }
+                          // Живий апдейт на сторінці booking
+                          if (typeof window !== "undefined") {
+                            window.dispatchEvent(
+                              new CustomEvent("service:select", {
+                                detail: {
+                                  ...persist,
+                                  priceCents, // додатково, якщо знадобиться
+                                },
+                              })
+                            );
+                          }
 
-                        onClose();
-                      }}
-                    >
-                      <span className="pm-left">
-                        <b>{s.title}</b>
-                        <span className="pm-dur">({s.duration})</span>
-                      </span>
-                      <span className="pm-price">{s.price}</span>
-                    </button>
-                  ))}
+                          onClose();
+                        }}
+                      >
+                        <span className="pm-left">
+                          <b>{s.title}</b>
+                          <span className="pm-dur">({s.duration})</span>
+                        </span>
+                        <span className="pm-price">{s.price}</span>
+                      </button>
+                    );
+                  })}
               </div>
             </section>
           ))}

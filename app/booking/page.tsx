@@ -30,6 +30,10 @@ class HttpError extends Error {
     this.status = status;
   }
 }
+const SMALL_SERVICES_BY_ID: Record<string, { title: string; price: string; durationMin: number }> = {
+  "wax-brows": { title: "Wax brows", price: "$25", durationMin: 15 },
+  "lip-wax":   { title: "Lip wax",   price: "$15", durationMin: 15 }, // якщо у тебе $10 — просто поміняй на "$10"
+};
 
 /* ---------- time utils ---------- */
 function toTime(h: number, m: number) {
@@ -192,6 +196,26 @@ export default function BookingPage() {
       }
     } catch {}
   }, []);
+
+  useEffect(() => {
+  const sp = new URLSearchParams(window.location.search);
+  const sid = sp.get("service");
+  if (!sid) return;
+
+  const patch = SMALL_SERVICES_BY_ID[sid];
+  if (!patch) return;
+
+  setSelectedService((prev) => {
+    const next = {
+      title: prev?.title ?? patch.title,
+      price: patch.price,
+      durationMin: patch.durationMin,
+    };
+    try { localStorage.setItem("selectedService", JSON.stringify(next)); } catch {}
+    return next;
+  });
+  setSlots(genSlots(SLOT_MINUTES, patch.durationMin));
+}, []);
 
   useEffect(() => {
     const onPick = (e: Event) => {
