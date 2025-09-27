@@ -522,7 +522,7 @@ export default function BookingPage() {
           <button
             type="button"
             className="back-home-btn"
-            onClick={() => { window.location.href = "https://ozbrows.netlify.app/"; }}
+            onClick={() => { window.location.href = "https://ozhbrows.netlify.app/"; }}
           >
             <span className="icon">
               <ChevronLeft size={20} />
