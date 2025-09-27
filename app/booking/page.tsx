@@ -84,7 +84,6 @@ function nameIsValid(name: string) {
   const t = name.trim();
   return t.length >= 2 && UA_LETTERS.test(t);
 }
-
 function sanitizePhoneInput(s: string) {
   let out = s.replace(/[A-Za-zА-Яа-яЁёІіЇїЄєҐґ]/g, "");
   out = out.replace(/[^0-9+()\-\s]/g, "");
@@ -95,6 +94,21 @@ function phoneIsValid(phone: string) {
   const digits = phone.replace(/\D/g, "");
   return digits.length >= 7 && digits.length <= 15;
 }
+
+function parseUsdToCentsLocal(s?: string): number | null {
+  if (!s) return null;
+  const m = String(s).match(/\d+(?:\.\d{1,2})?/);
+  return m ? Math.round(parseFloat(m[0]) * 100) : null;
+}
+function getChargeCentsLocal(fullPriceCents?: number | null) {
+
+  if (fullPriceCents === 2500 || fullPriceCents === 1500) return fullPriceCents;
+  return null; 
+}
+function fmtUSD(cents: number) {
+  return `$${(cents / 100).toFixed(0)}`;
+}
+
 /* ---------- data helpers ---------- */
 async function loadDay(dateStr: string): Promise<DayData> {
   const url = new URL(`${API_BASE}/availability`, location.origin);
@@ -156,7 +170,6 @@ export default function BookingPage() {
   const canPay =
     !!selected && nameIsValid(name) && phoneIsValid(phone) && !busy;
 
-  // ===== Toast state (mobile-first) =====
   const [flash, setFlash] = useState<null | {
     kind: "success" | "info" | "error";
     title: string;
@@ -438,6 +451,11 @@ export default function BookingPage() {
       year: "numeric",
     });
 
+  const fullPriceCentsLocal = parseUsdToCentsLocal(selectedService?.price);
+  const uiChargeCents = getChargeCentsLocal(fullPriceCentsLocal);
+  const buttonLabel =
+    busy ? "Processing…" : uiChargeCents ? `Pay ${fmtUSD(uiChargeCents)}` : "Pay deposit";
+
   return (
     <>
       {/* Toast (mobile-first) */}
@@ -632,7 +650,7 @@ export default function BookingPage() {
                   onClick={handleConfirm}
                   disabled={!canPay}
                 >
-                  {busy ? "Processing…" : "Pay deposit"}
+                  {buttonLabel}
                 </button>
               </div>
             </div>

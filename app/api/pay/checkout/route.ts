@@ -13,6 +13,12 @@ const noCache: Record<string, string> = {
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
+function parseUsdToCents(s?: string): number | null {
+  if (!s) return null;
+  const m = String(s).match(/\d+(?:\.\d{1,2})?/);
+  return m ? Math.round(parseFloat(m[0]) * 100) : null;
+}
+
 export async function POST(req: Request) {
   try {
     const body = (await req.json().catch(() => null)) as {
@@ -26,14 +32,22 @@ export async function POST(req: Request) {
     } | null;
 
     if (!body?.date || !body?.time || !body?.bookingId) {
-      return NextResponse.json({ error: "missing fields" }, { status: 400, headers: noCache });
+      return NextResponse.json(
+        { error: "missing fields" },
+        { status: 400, headers: noCache }
+      );
     }
 
-    const amount = Number(process.env.DEPOSIT_AMOUNT_CENTS || 0);
+    const depositDefault =
+      Number(process.env.DEPOSIT_AMOUNT_CENTS ?? 2000) || 2000;
     const currency = (process.env.DEPOSIT_CURRENCY || "usd").toLowerCase();
-    if (!amount || !Number.isFinite(amount)) {
-      return NextResponse.json({ error: "invalid deposit amount" }, { status: 500, headers: noCache });
-    }
+
+    const fullPriceCents = parseUsdToCents(body?.price);
+
+    const isSmallFull =
+      fullPriceCents === 2500 || fullPriceCents === 1500 ? true : false;
+
+    const amount = isSmallFull ? (fullPriceCents as number) : depositDefault;
 
     const origin = new URL(req.url).origin;
 
@@ -48,6 +62,8 @@ export async function POST(req: Request) {
         phone: body.phone || "",
         serviceTitle: body.serviceTitle || "",
         price: body.price || "",
+        amount_cents: String(amount),
+        charge_type: isSmallFull ? "full_small_service" : "deposit",
       },
       line_items: [
         {
@@ -55,8 +71,10 @@ export async function POST(req: Request) {
             currency,
             unit_amount: amount,
             product_data: {
-              name: "Non-refundable deposit",
-              description: `${body.serviceTitle || "Service"} — ${body.date} ${body.time}`,
+              name: isSmallFull ? "Service payment" : "Non-refundable deposit",
+              description: `${body.serviceTitle || "Service"} — ${body.date} ${
+                body.time
+              }`,
             },
           },
           quantity: 1,
@@ -66,9 +84,15 @@ export async function POST(req: Request) {
       cancel_url: `${origin}/booking?cancelled=1`,
     });
 
-    return NextResponse.json({ url: session.url }, { status: 200, headers: noCache });
+    return NextResponse.json(
+      { url: session.url },
+      { status: 200, headers: noCache }
+    );
   } catch (e) {
     console.error(e);
-    return NextResponse.json({ error: "server error" }, { status: 500, headers: noCache });
+    return NextResponse.json(
+      { error: "server error" },
+      { status: 500, headers: noCache }
+    );
   }
 }
