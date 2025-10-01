@@ -10,6 +10,9 @@ const images = [
   { src: "/images/brows12.png", caption: "Brows" },
   { src: "/images/makeup14.jpg", caption: "Makeup" },
   { src: "/images/brows15.jpg", caption: "Brows" },
+  { src: "/images/makeup11.jpg", caption: "Makeup" },
+  { src: "/images/brows13.jpg", caption: "Brows" },
+  
   { src: "/images/lash1.jpg", caption: "Lashes" },
   { src: "/images/brows0.jpg", caption: "Brows" },
   { src: "/images/makeup1.jpg", caption: "Makeup" },
@@ -25,8 +28,7 @@ const images = [
   { src: "/images/brows8.jpg", caption: "Brows" },
   { src: "/images/makeup7.jpeg", caption: "Makeup" },
   { src: "/images/makeup9.jpg", caption: "Makeup" },
-  { src: "/images/brows13.jpg", caption: "Brows" },
-  { src: "/images/makeup11.jpg", caption: "Makeup" },
+  
   { src: "/images/makeup12.jpg", caption: "Makeup" },
   { src: "/images/lash4.jpg", caption: "Lashes" },
   { src: "/images/makeup13.jpg", caption: "Makeup" },
