@@ -10,7 +10,6 @@ const images = [
   { src: "/images/brows12.png", caption: "Brows" },
   { src: "/images/makeup14.jpg", caption: "Makeup" },
   { src: "/images/brows15.jpg", caption: "Brows" },
-  { src: "/images/makeup0.jpg", caption: "Makeup" },
   { src: "/images/lash1.jpg", caption: "Lashes" },
   { src: "/images/brows0.jpg", caption: "Brows" },
   { src: "/images/makeup1.jpg", caption: "Makeup" },
