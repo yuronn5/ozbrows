@@ -2,38 +2,47 @@
 
 import { useEffect, useState } from "react";
 
-const KEY = "ozbrows:promo:v1:dismissed"; // bump v1 → v2 to show a new campaign
+const KEY = "ozbrows:promo:v1:dismissed";
+
+const COOKIE_MAX_DAYS = 400;
 
 function getCookie(name: string) {
   if (typeof document === "undefined") return "";
   const m = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
   return m ? decodeURIComponent(m[2]) : "";
 }
-function setCookie(name: string, value: string, days = 365) {
+function setCookie(name: string, value: string, days = COOKIE_MAX_DAYS) {
   if (typeof document === "undefined") return;
   const exp = new Date();
   exp.setDate(exp.getDate() + days);
+  const secure = location.protocol === "https:" ? "; Secure" : "";
   document.cookie =
     `${name}=${encodeURIComponent(value)};` +
-    `expires=${exp.toUTCString()}; path=/; SameSite=Lax`;
+    `Max-Age=${days * 86400}; ` +
+    `expires=${exp.toUTCString()}; path=/; SameSite=Lax` +
+    secure;
 }
 
 export default function PromoPopup() {
   const [open, setOpen] = useState(false);
 
-  // show only if not previously dismissed
   useEffect(() => {
-    const dismissedLS =
+    const lsDismissed =
       typeof window !== "undefined" && localStorage.getItem(KEY) === "1";
-    const dismissedCookie = getCookie(KEY) === "1";
-    if (!dismissedLS && !dismissedCookie) {
-      // slight delay to avoid SSR → CSR flash
-      const t = setTimeout(() => setOpen(true), 400);
-      return () => clearTimeout(t);
+    const cookieDismissed = getCookie(KEY) === "1";
+
+    if (lsDismissed || cookieDismissed) {
+      try {
+        localStorage.setItem(KEY, "1");
+      } catch {}
+      setCookie(KEY, "1", COOKIE_MAX_DAYS);
+      return;
     }
+
+    const t = setTimeout(() => setOpen(true), 400);
+    return () => clearTimeout(t);
   }, []);
 
-  // lock page scroll, handle Esc
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
@@ -50,7 +59,7 @@ export default function PromoPopup() {
     try {
       localStorage.setItem(KEY, "1");
     } catch {}
-    setCookie(KEY, "1");
+    setCookie(KEY, "1", COOKIE_MAX_DAYS);
   };
   const handleClose = () => {
     persistDismiss();
@@ -87,7 +96,6 @@ export default function PromoPopup() {
         </div>
       </div>
 
-      {/* styles */}
       <style jsx>{`
         .promoBackdrop {
           position: fixed;
@@ -107,7 +115,6 @@ export default function PromoPopup() {
             opacity: 1;
           }
         }
-
         .promoCard {
           width: min(92vw, 420px);
           background: #fff;
