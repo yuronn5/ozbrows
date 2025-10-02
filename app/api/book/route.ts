@@ -81,7 +81,10 @@ export async function POST(req: Request) {
     const adminKey = (req.headers.get("x-admin-key") || "").trim();
     const isAdmin = !!adminKey && adminKey === process.env.ADMIN_KEY;
 
-    pruneUnpaid(day);
+    const removed = pruneUnpaid(day);
+    if (removed) {
+      await setDay(day);
+    }
 
     const action = body?.action;
 
