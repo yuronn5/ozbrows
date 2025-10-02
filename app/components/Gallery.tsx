@@ -13,7 +13,7 @@ const images = [
   { src: "/images/brows13.jpg", caption: "Brows" },
   { src: "/images/makeup11.jpg", caption: "Makeup" },
   { src: "/images/lash1.jpg", caption: "Lashes" },
-  { src: "/images/makeup1.jpg", caption: "Makeup" },
+  { src: "/images/makeup7.jpeg", caption: "Makeup" },
   { src: "/images/brows2.jpeg", caption: "Brows" },
   { src: "/images/makeup2.jpeg", caption: "Makeup" },
   { src: "/images/brows5.jpg", caption: "Brows" },
@@ -24,9 +24,9 @@ const images = [
   { src: "/images/makeup6.jpeg", caption: "Makeup" },
   { src: "/images/lash3.jpg", caption: "Lashes" },
   { src: "/images/brows8.jpg", caption: "Brows" },
-  { src: "/images/makeup7.jpeg", caption: "Makeup" },
   { src: "/images/makeup9.jpg", caption: "Makeup" },
   { src: "/images/makeup12.jpg", caption: "Makeup" },
+  { src: "/images/makeup1.jpg", caption: "Makeup" },
   { src: "/images/lash4.jpg", caption: "Lashes" },
   { src: "/images/makeup13.jpg", caption: "Makeup" },
 ];
@@ -55,7 +55,7 @@ export default function Gallery() {
 
     const apply = () => {
       const pv = computePV();
-      setPerView(prev => {
+      setPerView((prev) => {
         if (prev !== pv) {
           setAnim(false);
           setIndex(pv); // стартовий індекс = кількість префіксних клонів
@@ -90,8 +90,8 @@ export default function Gallery() {
     }
   }, [index, perView]);
 
-  const next = () => setIndex(i => i + 1);
-  const prev = () => setIndex(i => i - 1);
+  const next = () => setIndex((i) => i + 1);
+  const prev = () => setIndex((i) => i - 1);
 
   const start = () => {
     if (timerRef.current) return;
@@ -131,8 +131,9 @@ export default function Gallery() {
     setLbOpen(true);
   };
   const closeLb = () => setLbOpen(false);
-  const lbNext = () => setLbIndex(v => (v + 1) % images.length);
-  const lbPrev = () => setLbIndex(v => (v - 1 + images.length) % images.length);
+  const lbNext = () => setLbIndex((v) => (v + 1) % images.length);
+  const lbPrev = () =>
+    setLbIndex((v) => (v - 1 + images.length) % images.length);
 
   useEffect(() => {
     if (!lbOpen) return;
@@ -180,7 +181,10 @@ export default function Gallery() {
                     alt={`work-${real + 1}`}
                     onClick={() => openLb(real)}
                   />
-                  <div className={styles.captionAlways} style={{ borderRadius: 16 }}>
+                  <div
+                    className={styles.captionAlways}
+                    style={{ borderRadius: 16 }}
+                  >
                     {item.caption}
                   </div>
                 </div>
@@ -209,13 +213,44 @@ export default function Gallery() {
 
       {lbOpen &&
         createPortal(
-          <div className={styles.lb} role="dialog" aria-modal="true" onClick={closeLb}>
-            <div className={styles.lbFrame} role="document" onClick={e => e.stopPropagation()}>
-              <img className={styles.lbImg} src={images[lbIndex].src} alt={`Full ${lbIndex + 1}`} />
+          <div
+            className={styles.lb}
+            role="dialog"
+            aria-modal="true"
+            onClick={closeLb}
+          >
+            <div
+              className={styles.lbFrame}
+              role="document"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <img
+                className={styles.lbImg}
+                src={images[lbIndex].src}
+                alt={`Full ${lbIndex + 1}`}
+              />
               <p className={styles.lbCaption}>{images[lbIndex].caption}</p>
-              <button className={styles.lbClose} onClick={closeLb} aria-label="Close">×</button>
-              <button className={`${styles.lbArrow} ${styles.lbLeft}`} onClick={lbPrev} aria-label="Previous">‹</button>
-              <button className={`${styles.lbArrow} ${styles.lbRight}`} onClick={lbNext} aria-label="Next">›</button>
+              <button
+                className={styles.lbClose}
+                onClick={closeLb}
+                aria-label="Close"
+              >
+                ×
+              </button>
+              <button
+                className={`${styles.lbArrow} ${styles.lbLeft}`}
+                onClick={lbPrev}
+                aria-label="Previous"
+              >
+                ‹
+              </button>
+              <button
+                className={`${styles.lbArrow} ${styles.lbRight}`}
+                onClick={lbNext}
+                aria-label="Next"
+              >
+                ›
+              </button>
             </div>
           </div>,
           document.body
