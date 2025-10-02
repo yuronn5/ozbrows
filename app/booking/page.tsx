@@ -573,32 +573,6 @@ export default function BookingPage() {
 
               {/* SCROLLABLE BODY */}
               <div className="sheet__body">
-                <div
-                  className="slots"
-                  role="listbox"
-                  aria-label="Available times"
-                >
-                  {slots.map((t) => {
-                    const disabled =
-                      isBlocked(t) || !fitsFrom(t) || overflows(t);
-                    const selectedNow = selected === t;
-                    return (
-                      <button
-                        key={t}
-                        role="option"
-                        aria-selected={selectedNow}
-                        className={`slot${selectedNow ? " selected" : ""}${
-                          disabled ? " disabled" : ""
-                        }`}
-                        onClick={() => !disabled && setSelected(t)}
-                        disabled={disabled}
-                      >
-                        {t}
-                      </button>
-                    );
-                  })}
-                </div>
-
                 {/* FORM */}
                 <div className="form">
                   <div>
@@ -642,6 +616,33 @@ export default function BookingPage() {
                     )}
                   </div>
                 </div>
+                <div
+                  className="slots"
+                  role="listbox"
+                  aria-label="Available times"
+                >
+                  {slots.map((t) => {
+                    const disabled =
+                      isBlocked(t) || !fitsFrom(t) || overflows(t);
+                    const selectedNow = selected === t;
+                    return (
+                      <button
+                        key={t}
+                        role="option"
+                        aria-selected={selectedNow}
+                        className={`slot${selectedNow ? " selected" : ""}${
+                          disabled ? " disabled" : ""
+                        }`}
+                        onClick={() => !disabled && setSelected(t)}
+                        disabled={disabled}
+                      >
+                        {t}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                
 
                 {bookings?.length > 0 && (
                   <div className="admin-list">
