@@ -204,12 +204,8 @@ export default function Page() {
 
           <h1 className="hero__title">
             Highlight your natural beauty <br />
-            <span className="accent">with perfect brows</span>
+            <span className="accent">with flawless brows, makeup, and lashes.</span>
           </h1>
-
-          <p className="hero__lead">
-            Professional shaping, lamination, and tinting for brows and lashes. Perfect form, long-lasting results, and gentle care. Makeup that enhances your natural beauty and stays fresh all day.
-          </p>
 
           <div className="hero__cta">
             <a
