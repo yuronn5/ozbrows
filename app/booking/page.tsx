@@ -5,7 +5,6 @@ import { Calendar } from "@fullcalendar/core";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin, { DateClickArg } from "@fullcalendar/interaction";
 import "./booking.css";
-
 import { ChevronLeft } from "lucide-react";
 
 const API_BASE = "/api";

@@ -7,6 +7,7 @@ import { MapPin, Phone, Instagram } from "lucide-react";
 import { useRouter } from "next/navigation";
 import PricesModal, { Service } from "./components/PricesModal";
 import TestimonialsSection from "./components/TestimonialsSection";
+import PromoPopup from "./components/PromoPopup";
 
 export default function Page() {
   const [showPrices, setShowPrices] = useState(false);
@@ -184,7 +185,7 @@ export default function Page() {
   return (
     <>
       <Nav />
-
+      <PromoPopup />
       {/* ===== HERO full-bleed ===== */}
       <section id="home" className="hero hero--fullbleed">
         <div className="hero__bg" aria-hidden>
