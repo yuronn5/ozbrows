@@ -828,6 +828,23 @@ section.contact {
   line-height: 1.6;
   color: rgba(255,255,255,.92);
 }
+.container.pricing .grid-1 > #gallery {
+  min-width: 0;          
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;    
+}
+
+
+.container.pricing .grid-1 > #gallery .gallery {
+  min-width: 0;
+}
+
+
+.gallery_viewport {
+  overflow: hidden;
+}
 
 .hero__cta{ display:flex; gap:12px; flex-wrap:wrap; }
 .btn.btn--ghost{

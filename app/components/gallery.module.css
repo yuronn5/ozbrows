@@ -1,5 +1,6 @@
 .wrapper {
   padding: 10px 0 0;
+  overflow: hidden;
 }
 .title {
   text-align: center;
