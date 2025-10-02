@@ -225,7 +225,7 @@ export default function Page() {
 
           <ul className="hero__stats">
             <li>
-              <b>1.2k+</b>
+              <b>5k+</b>
               <span>happy clients</span>
             </li>
             <li>
