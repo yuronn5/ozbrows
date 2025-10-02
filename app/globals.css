@@ -874,4 +874,7 @@ section.contact {
       linear-gradient(90deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 65%);
   }
   .hero__img{ object-position: 50% 25%; } 
+  div.hero__content {
+    padding-top: 100%;
+  }
 }
