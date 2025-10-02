@@ -189,7 +189,7 @@ export default function Page() {
       <section id="home" className="hero hero--fullbleed">
         <div className="hero__bg" aria-hidden>
           <Image
-            src="/images/hero.png"
+            src="/images/hero2.jpg"
             alt=""
             fill
             priority
