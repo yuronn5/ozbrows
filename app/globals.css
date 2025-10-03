@@ -778,23 +778,25 @@ section.contact {
   margin-inline: calc(50% - 50vw);
   width: 100vw;
 
-  min-height: min(74vh, 860px);
-  isolation: isolate;
+  /* фіксована висота блоку; контент не змінює її */
+  block-size: clamp(520px, 78svh, 860px);
   overflow: clip;
-}
-
-.hero--fullbleed{
-  position: relative;
-  overflow: hidden;
-  min-height: clamp(520px, 78svh, 860px);   /* fallback для старих браузерів */
+  isolation: isolate;
 }
 @supports (height: 100dvh) {
   .hero--fullbleed{
-    min-height: clamp(520px, 78dvh, 860px); /* стабільно навіть на мобільних з адрес-баром */
+    block-size: clamp(520px, 78dvh, 860px);
   }
 }
+
+
+
 .hero__bg{ position:absolute; inset:0; }
-.hero__img{ width:100%; height:100%; object-fit:cover; }
+.hero__img{
+  width:100%; height:100%;
+  object-fit: cover;
+  object-position: 60% 28%;
+}
 
 
 .hero__bg{ position:absolute; inset:0; }
@@ -811,15 +813,29 @@ section.contact {
 }
 
 .hero__content{
-  position: relative;
-  z-index: 1;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;      /* або flex-end, якщо хочеш нижче */
+  gap: clamp(14px, 2.2vw, 22px);
   color: #fff;
   max-width: 1200px;
   margin: 0 auto;
-  padding: clamp(32px, 6vw, 80px) clamp(16px, 5vw, 40px);
-  display:flex; flex-direction:column; gap: clamp(14px, 2.2vw, 22px);
+  padding: clamp(24px, 5vw, 40px);
 }
-
+@media (max-width: 720px){
+  .hero__overlay{
+    background:
+      linear-gradient(180deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,.35) 40%, rgba(0,0,0,0) 70%),
+      linear-gradient(90deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 65%);
+  }
+  .hero__img{ object-position: 50% 25%; }
+  .hero__content{
+    justify-content: flex-end;
+    padding-bottom: clamp(18px, 10vh, 80px);
+  }
+}
 .hero__eyebrow{
   display:inline-flex; gap:8px; align-items:center;
   padding: 8px 12px; border-radius: 999px;
