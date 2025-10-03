@@ -253,7 +253,7 @@ export default function BookingPage() {
       setFlash({
         kind: "info",
         title: "Payment canceled",
-        text: "You can try again. The slot may still be available.",
+        text: "Booking error. You can try again. The slot may still be available.",
       });
     }
     if (paid || cancelled) {

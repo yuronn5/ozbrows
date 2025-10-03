@@ -783,6 +783,20 @@ section.contact {
   overflow: clip;
 }
 
+.hero--fullbleed{
+  position: relative;
+  overflow: hidden;
+  min-height: clamp(520px, 78svh, 860px);   /* fallback для старих браузерів */
+}
+@supports (height: 100dvh) {
+  .hero--fullbleed{
+    min-height: clamp(520px, 78dvh, 860px); /* стабільно навіть на мобільних з адрес-баром */
+  }
+}
+.hero__bg{ position:absolute; inset:0; }
+.hero__img{ width:100%; height:100%; object-fit:cover; }
+
+
 .hero__bg{ position:absolute; inset:0; }
 .hero__img{
   object-fit: cover;
