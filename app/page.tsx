@@ -182,12 +182,14 @@ export default function Page() {
     return () => io.disconnect();
   }, []);
 
+  const [heroReady, setHeroReady] = useState(false);
+
   return (
     <>
       <Nav />
       <PromoPopup />
       {/* ===== HERO full-bleed ===== */}
-      <section id="home" className="hero hero--fullbleed">
+      <section id="home" className={`hero hero--fullbleed ${heroReady ? "is-ready" : ""}`}>
         <div className="hero__bg" aria-hidden>
           <Image
             src="/images/hero2.jpg"
@@ -196,6 +198,7 @@ export default function Page() {
             priority
             sizes="100vw"
             className="hero__img"
+            onLoadingComplete={() => setHeroReady(true)}
           />
           <span className="hero__overlay" />
         </div>
