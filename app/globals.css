@@ -911,15 +911,25 @@ section.contact {
 .hero__stats b{ font-size: clamp(18px, 2.6vw, 28px); }
 .hero__stats span{ color: rgba(255,255,255,.8); font-size: 14px; }
 
+html { -webkit-text-size-adjust: 100%; }
+@media (max-width: 768px) {
+  input, select, textarea, button {
+    font-size: 16px;           
+    line-height: 1.2;
+    min-height: 44px;          
+  }
 
-/* @media (max-width: 720px){
-  .hero__overlay{
-    background:
-      linear-gradient(180deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,.35) 40%, rgba(0,0,0,0) 70%),
-      linear-gradient(90deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 65%);
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"],
+  input[type="month"],
+  input[type="number"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="search"] {
+    font-size: 16px;
   }
-  .hero__img{ object-position: 50% 25%; } 
-  div.hero__content {
-    padding-top: 50%;
-  }
-} */
+}
+@supports (-webkit-touch-callout: none) {
+  input, select, textarea { font-size: 16px; }
+}
