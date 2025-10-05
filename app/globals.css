@@ -929,6 +929,10 @@ html { -webkit-text-size-adjust: 100%; }
   input[type="search"] {
     font-size: 16px;
   }
+
+  .testimonials__wrap button {
+    min-height: unset;
+  }
 }
 @supports (-webkit-touch-callout: none) {
   input, select, textarea { font-size: 16px; }
