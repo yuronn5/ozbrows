@@ -417,11 +417,11 @@ export default function Page() {
               <div className="contact-row">
                 <div className="contact-text">
                   <div className="contact-label">Instagram</div>
-                  <div className="contact-value">@ozbrows</div>
+                  <div className="contact-value">@pmu_olha_chicago</div>
                 </div>
                 <a
                   className="icon-btn"
-                  href="https://instagram.com/ozbrows"
+                  href="https://www.instagram.com/pmu_olha_chicago/"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Open Instagram @ozbrows"
