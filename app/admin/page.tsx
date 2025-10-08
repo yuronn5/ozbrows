@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import "./admin.css";
 
 type Row = {
@@ -17,7 +17,6 @@ type Row = {
 };
 
 const API_BASE = "/api";
-const STEP = 15; // хвилинна сітка (узгоджено з беком)
 
 /* ---------- utils ---------- */
 function toISO(d: Date) {
@@ -39,21 +38,6 @@ function fmtDuration(min?: number) {
   const mm = m % 60;
   return h ? `${h}h${mm ? ` ${mm}m` : ""}` : `${mm}m`;
 }
-function validTimeStr(s: string) {
-  return /^\d{2}:\d{2}$/.test(s);
-}
-function parseTime(t: string) {
-  const [h, m] = t.split(":").map(Number);
-  return h * 60 + m;
-}
-function toTime(min: number) {
-  const h = Math.floor(min / 60),
-    m = min % 60;
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-}
-function addMinutes(timeStr: string, minutes: number) {
-  return toTime(parseTime(timeStr) + minutes);
-}
 
 export default function AdminPage() {
   const [from, setFrom] = useState(() => toISO(new Date()));
@@ -65,16 +49,16 @@ export default function AdminPage() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(false);
 
-
+  // Admin blocks quick panel
   const [blockDate, setBlockDate] = useState<string>(() => toISO(new Date()));
   const [blockStart, setBlockStart] = useState<string>("08:00");
-  const [blockEnd, setBlockEnd] = useState<string>(() => addMinutes("08:00", 45));
+  const [blockEnd, setBlockEnd] = useState<string>("08:45");
 
+  useEffect(() => {
+    // no-op
+  }, []);
 
-  const keyRef = useRef<string>("");
-  const [adminReady, setAdminReady] = useState(false);
-
-
+  /* ---------- admin key + api ---------- */
   async function ensureAdminKey(): Promise<string> {
     let key =
       typeof window !== "undefined"
@@ -84,26 +68,11 @@ export default function AdminPage() {
       const pin =
         typeof window !== "undefined" ? prompt("Enter admin PIN") || "" : "";
       if (!pin) throw new Error("Canceled");
-      key = pin.trim();
+      key = pin;
       sessionStorage.setItem("ADMIN_KEY", key);
     }
     return key;
   }
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const k = await ensureAdminKey();
-        if (!cancelled) keyRef.current = k;
-      } finally {
-        if (!cancelled) setAdminReady(true);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   async function api<T>(
     path: string,
@@ -111,8 +80,7 @@ export default function AdminPage() {
     method: "GET" | "POST" = "GET",
     body?: unknown
   ): Promise<T> {
-    let key = keyRef.current || (await ensureAdminKey());
-    keyRef.current = key;
+    let key = await ensureAdminKey();
 
     const doFetch = async (k: string): Promise<Response> => {
       let url = `${API_BASE}${path}`;
@@ -134,23 +102,24 @@ export default function AdminPage() {
     if (res.status === 401) {
       sessionStorage.removeItem("ADMIN_KEY");
       key = await ensureAdminKey();
-      keyRef.current = key;
       res = await doFetch(key);
     }
 
     const json: unknown = await res.json().catch(() => ({}));
+
     if (!res.ok) {
       let msg = "API error";
-      if (typeof json === "object" && json && "error" in json) {
+      if (typeof json === "object" && json !== null && "error" in json) {
         const val = (json as Record<string, unknown>).error;
         if (typeof val === "string" && val.trim()) msg = val;
       }
       throw new Error(msg);
     }
+
     return json as T;
   }
 
-
+  /* ---------- actions ---------- */
   async function load() {
     try {
       setLoading(true);
@@ -206,37 +175,73 @@ export default function AdminPage() {
     }
   }
 
+  // --- reschedule (edit) booking ---
+  async function reschedule(date: string, time: string, defDurMin?: number) {
+    const nd = prompt("New date (YYYY-MM-DD):", date)?.trim();
+    if (!nd) return;
+    const nt = prompt("New time (HH:MM):", time)?.trim();
+    if (!nt) return;
+    const ndurStr = prompt("New duration minutes (optional):", String(defDurMin ?? ""))?.trim();
+    const ndur = ndurStr ? Number(ndurStr) || undefined : undefined;
 
+    try {
+      await api<{ ok: true }>("/book", {}, "POST", {
+        action: "admin-reschedule",
+        date,          // old date
+        time,          // old time
+        newDate: nd,   // new date
+        newTime: nt,   // new time
+        newDurationMin: ndur,
+      });
+
+      setRows((prev) => {
+        // при зміні дати — якщо вона поза поточним діапазоном, просто приберемо рядок
+        const inRange = (d: string) => d >= from && d <= to;
+        const base = prev.filter((r) => !(r.date === date && r.time === time && !r.isBlock));
+        if (inRange(nd)) {
+          base.push({
+            ...(prev.find((r) => r.date === date && r.time === time) as Row),
+            date: nd,
+            time: nt,
+            durationMin: ndur ?? defDurMin,
+          });
+        }
+        return base.sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+      });
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Reschedule failed");
+      console.error(e);
+    }
+  }
+
+  // admin blocks quick panel (start/end → duration)
+  function validTimeStr(s: string) {
+    return /^\d{2}:\d{2}$/.test(s);
+  }
+  function minutesBetween(a: string, b: string) {
+    const [ah, am] = a.split(":").map(Number);
+    const [bh, bm] = b.split(":").map(Number);
+    return (bh * 60 + bm) - (ah * 60 + am);
+  }
   async function blockInterval() {
     if (!blockDate || !validTimeStr(blockStart) || !validTimeStr(blockEnd)) {
-      alert("Set date and valid HH:MM times for Start and End.");
+      alert("Set date and HH:MM for Start and End.");
       return;
     }
-    const startMin = parseTime(blockStart);
-    const endMin = parseTime(blockEnd);
-    if (endMin <= startMin) {
-      alert("End time must be after Start time.");
-      return;
-    }
-
-    let diff = endMin - startMin;
-    diff = Math.max(5, Math.min(8 * 60, diff));
-    diff = Math.ceil(diff / STEP) * STEP;
-
+    const dur = Math.max(5, Math.min(8 * 60, minutesBetween(blockStart, blockEnd)));
     try {
       await api<{ ok: true }>("/book", {}, "POST", {
         action: "admin-block",
         date: blockDate,
         time: blockStart,
-        durationMin: diff,
+        durationMin: dur,
       });
-      alert(`Blocked ${blockStart} → ${blockEnd} (${fmtDuration(diff)}) on ${blockDate}`);
+      alert(`Blocked ${blockStart}–${blockEnd} (${dur}m) on ${blockDate}`);
     } catch (e) {
       alert(e instanceof Error ? e.message : "Failed to block interval");
       console.error(e);
     }
   }
-
   async function blockWholeDay() {
     if (!blockDate) return;
     if (!confirm(`Block the whole day ${blockDate}?`)) return;
@@ -266,6 +271,7 @@ export default function AdminPage() {
     }
   }
 
+  /* ---------- UI ---------- */
   return (
     <div className="wrap">
       <div className="card">
@@ -278,7 +284,6 @@ export default function AdminPage() {
               type="date"
               value={from}
               onChange={(e) => setFrom(e.target.value)}
-              disabled={!adminReady}
             />
           </label>
           <label>
@@ -287,20 +292,15 @@ export default function AdminPage() {
               type="date"
               value={to}
               onChange={(e) => setTo(e.target.value)}
-              disabled={!adminReady}
             />
           </label>
 
-          <button
-            className="btn primary"
-            onClick={load}
-            disabled={loading || !adminReady}
-            title={!adminReady ? "Enter PIN to unlock" : ""}
-          >
-            {loading ? "Loading…" : adminReady ? "Load" : "Unlocking…"}
+          <button className="btn primary" onClick={load} disabled={loading}>
+            {loading ? "Loading…" : "Load"}
           </button>
         </div>
 
+        {/* Admin blocks panel */}
         <div className="toolbar blocks">
           <strong>Admin blocks</strong>
           <label>
@@ -309,7 +309,6 @@ export default function AdminPage() {
               type="date"
               value={blockDate}
               onChange={(e) => setBlockDate(e.target.value)}
-              disabled={!adminReady}
             />
           </label>
           <label>
@@ -317,15 +316,8 @@ export default function AdminPage() {
             <input
               type="time"
               value={blockStart}
-              onChange={(e) => {
-                setBlockStart(e.target.value);
-                // за бажанням підтасовуємо End = Start + 45
-                if (validTimeStr(e.target.value)) {
-                  setBlockEnd(addMinutes(e.target.value, 45));
-                }
-              }}
-              step={STEP * 60}
-              disabled={!adminReady}
+              onChange={(e) => setBlockStart(e.target.value)}
+              step={900}
             />
           </label>
           <label>
@@ -334,19 +326,18 @@ export default function AdminPage() {
               type="time"
               value={blockEnd}
               onChange={(e) => setBlockEnd(e.target.value)}
-              step={STEP * 60}
-              disabled={!adminReady}
+              step={900}
             />
           </label>
 
           <div className="btns">
-            <button className="btn primary" onClick={blockInterval} disabled={!adminReady}>
+            <button className="btn primary" onClick={blockInterval}>
               Block interval
             </button>
-            <button className="btn soft" onClick={blockWholeDay} disabled={!adminReady}>
+            <button className="btn soft" onClick={blockWholeDay}>
               Block day
             </button>
-            <button className="btn ghost" onClick={unblockWholeDay} disabled={!adminReady}>
+            <button className="btn ghost" onClick={unblockWholeDay}>
               Unblock day
             </button>
           </div>
@@ -385,7 +376,9 @@ export default function AdminPage() {
                       {r.serviceTitle ? (
                         <>
                           {r.serviceTitle}{" "}
-                          {r.price ? <span className="muted">• {r.price}</span> : null}
+                          {r.price ? (
+                            <span className="muted">• {r.price}</span>
+                          ) : null}
                         </>
                       ) : (
                         <span className="muted">—</span>
@@ -394,11 +387,19 @@ export default function AdminPage() {
                     <td>{fmtDuration(r.durationMin)}</td>
                     <td
                       className="hide-sm"
-                      dangerouslySetInnerHTML={{ __html: escapeHtml(r.name || "") }}
+                      dangerouslySetInnerHTML={{
+                        __html: escapeHtml(r.name || ""),
+                      }}
                     />
-                    <td dangerouslySetInnerHTML={{ __html: escapeHtml(r.phone || "") }} />
+                    <td
+                      dangerouslySetInnerHTML={{
+                        __html: escapeHtml(r.phone || ""),
+                      }}
+                    />
                     <td>
-                      <span className={`pill ${r.isBlock ? "blocked" : r.paid ? "paid" : ""}`}>
+                      <span
+                        className={`pill ${r.isBlock ? "blocked" : r.paid ? "paid" : ""}`}
+                      >
                         {r.isBlock ? "blocked" : r.paid ? "paid" : "booked"}
                       </span>
                     </td>
@@ -406,7 +407,7 @@ export default function AdminPage() {
                       className="hide-sm"
                       dangerouslySetInnerHTML={{
                         __html: r.paymentId
-                          ? escapeHtml(r.paymentId)
+                          ? escapeHtml(r.paymentId as string)
                           : '<span class="muted">—</span>',
                       }}
                     />
@@ -419,9 +420,20 @@ export default function AdminPage() {
                           Unblock
                         </button>
                       ) : (
-                        <button className="btn danger" onClick={() => cancel(r.date, r.time)}>
-                          Cancel
-                        </button>
+                        <>
+                          <button
+                            className="btn soft"
+                            onClick={() => reschedule(r.date, r.time, r.durationMin)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className="btn danger"
+                            onClick={() => cancel(r.date, r.time)}
+                          >
+                            Cancel
+                          </button>
+                        </>
                       )}
                     </td>
                   </tr>
