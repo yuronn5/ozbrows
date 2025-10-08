@@ -1,3 +1,4 @@
+// app/admin/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -51,8 +52,8 @@ export default function AdminPage() {
 
   // Admin blocks quick panel
   const [blockDate, setBlockDate] = useState<string>(() => toISO(new Date()));
-  const [blockStart, setBlockStart] = useState<string>("08:00");
-  const [blockEnd, setBlockEnd] = useState<string>("08:45");
+  const [blockTime, setBlockTime] = useState<string>("08:00");
+  const [blockDur, setBlockDur] = useState<number>(45);
 
   useEffect(() => {
     // no-op
@@ -92,7 +93,7 @@ export default function AdminPage() {
       }
       return fetch(url, {
         method,
-        headers: { "Content-Type": "application/json", "X-Admin-Key": k },
+               headers: { "Content-Type": "application/json", "X-Admin-Key": k },
         body: body ? JSON.stringify(body) : null,
         cache: "no-store",
       });
@@ -175,68 +176,63 @@ export default function AdminPage() {
     }
   }
 
-  // --- reschedule (edit) booking ---
-  async function reschedule(date: string, time: string, defDurMin?: number) {
-    const nd = prompt("New date (YYYY-MM-DD):", date)?.trim();
-    if (!nd) return;
-    const nt = prompt("New time (HH:MM):", time)?.trim();
-    if (!nt) return;
-    const ndurStr = prompt("New duration minutes (optional):", String(defDurMin ?? ""))?.trim();
+  // NEW: move/edit admin block
+  async function moveBlock(date: string, time: string, defDur?: number) {
+    const nd = prompt("New date (YYYY-MM-DD):", date)?.trim(); if (!nd) return;
+    const nt = prompt("New time (HH:MM):", time)?.trim(); if (!nt) return;
+    const ndurStr = prompt("New duration minutes (optional):", String(defDur ?? ""))?.trim();
     const ndur = ndurStr ? Number(ndurStr) || undefined : undefined;
 
     try {
       await api<{ ok: true }>("/book", {}, "POST", {
-        action: "admin-reschedule",
-        date,          // old date
-        time,          // old time
-        newDate: nd,   // new date
-        newTime: nt,   // new time
-        newDurationMin: ndur,
+        action: "admin-move-block",
+        date, time, durationMin: defDur,
+        newDate: nd, newTime: nt, newDurationMin: ndur,
       });
 
+      // optimistic update
       setRows((prev) => {
-        // при зміні дати — якщо вона поза поточним діапазоном, просто приберемо рядок
         const inRange = (d: string) => d >= from && d <= to;
-        const base = prev.filter((r) => !(r.date === date && r.time === time && !r.isBlock));
+        const base = prev.filter((r) => !(r.isBlock && r.date === date && r.time === time));
         if (inRange(nd)) {
           base.push({
-            ...(prev.find((r) => r.date === date && r.time === time) as Row),
             date: nd,
             time: nt,
-            durationMin: ndur ?? defDurMin,
+            name: "",
+            phone: "",
+            paid: false,
+            paymentId: "",
+            serviceTitle: "",
+            price: "",
+            durationMin: ndur ?? defDur,
+            isBlock: true,
           });
         }
         return base.sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
       });
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Reschedule failed");
+      alert(e instanceof Error ? e.message : "Move failed");
       console.error(e);
     }
   }
 
-  // admin blocks quick panel (start/end → duration)
+  // admin blocks quick panel
   function validTimeStr(s: string) {
     return /^\d{2}:\d{2}$/.test(s);
   }
-  function minutesBetween(a: string, b: string) {
-    const [ah, am] = a.split(":").map(Number);
-    const [bh, bm] = b.split(":").map(Number);
-    return (bh * 60 + bm) - (ah * 60 + am);
-  }
   async function blockInterval() {
-    if (!blockDate || !validTimeStr(blockStart) || !validTimeStr(blockEnd)) {
-      alert("Set date and HH:MM for Start and End.");
+    if (!blockDate || !validTimeStr(blockTime) || !Number.isFinite(blockDur)) {
+      alert("Set date, HH:MM time and duration (minutes).");
       return;
     }
-    const dur = Math.max(5, Math.min(8 * 60, minutesBetween(blockStart, blockEnd)));
     try {
       await api<{ ok: true }>("/book", {}, "POST", {
         action: "admin-block",
         date: blockDate,
-        time: blockStart,
-        durationMin: dur,
+        time: blockTime,
+        durationMin: Math.max(5, Math.min(8 * 60, Number(blockDur))),
       });
-      alert(`Blocked ${blockStart}–${blockEnd} (${dur}m) on ${blockDate}`);
+      alert(`Blocked ${blockTime} for ${blockDur}m on ${blockDate}`);
     } catch (e) {
       alert(e instanceof Error ? e.message : "Failed to block interval");
       console.error(e);
@@ -315,18 +311,20 @@ export default function AdminPage() {
             Start
             <input
               type="time"
-              value={blockStart}
-              onChange={(e) => setBlockStart(e.target.value)}
+              value={blockTime}
+              onChange={(e) => setBlockTime(e.target.value)}
               step={900}
             />
           </label>
           <label>
-            End
+            Duration (min)
             <input
-              type="time"
-              value={blockEnd}
-              onChange={(e) => setBlockEnd(e.target.value)}
-              step={900}
+              type="number"
+              min={5}
+              max={480}
+              step={5}
+              value={blockDur}
+              onChange={(e) => setBlockDur(Number(e.target.value) || 0)}
             />
           </label>
 
@@ -347,15 +345,33 @@ export default function AdminPage() {
           <table className="table">
             <thead>
               <tr>
-                <th className="col-date" title="Date">Date</th>
-                <th className="col-time" title="Time">Time</th>
-                <th className="col-service" title="Service">Service</th>
-                <th className="col-dur" title="Duration">Dur</th>
-                <th className="col-client hide-sm" title="Client name">Name</th>
-                <th className="col-phone" title="Phone">Phone</th>
-                <th className="col-status" title="Status">Status</th>
-                <th className="col-pay hide-sm" title="Payment">Pay</th>
-                <th className="col-act" title="Actions">Act</th>
+                <th className="col-date" title="Date">
+                  Date
+                </th>
+                <th className="col-time" title="Time">
+                  Time
+                </th>
+                <th className="col-service" title="Service">
+                  Service
+                </th>
+                <th className="col-dur" title="Duration">
+                  Dur
+                </th>
+                <th className="col-client hide-sm" title="Client name">
+                  Name
+                </th>
+                <th className="col-phone" title="Phone">
+                  Phone
+                </th>
+                <th className="col-status" title="Status">
+                  Status
+                </th>
+                <th className="col-pay hide-sm" title="Payment">
+                  Pay
+                </th>
+                <th className="col-act" title="Actions">
+                  Act
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -368,7 +384,9 @@ export default function AdminPage() {
               ) : (
                 rows.map((r) => (
                   <tr
-                    key={`${r.date}-${r.time}-${r.name}-${r.phone}-${r.isBlock ? "blk" : "bk"}`}
+                    key={`${r.date}-${r.time}-${r.name}-${r.phone}-${
+                      r.isBlock ? "blk" : "bk"
+                    }`}
                   >
                     <td>{r.date}</td>
                     <td>{r.time}</td>
@@ -398,7 +416,9 @@ export default function AdminPage() {
                     />
                     <td>
                       <span
-                        className={`pill ${r.isBlock ? "blocked" : r.paid ? "paid" : ""}`}
+                        className={`pill ${
+                          r.isBlock ? "blocked" : r.paid ? "paid" : ""
+                        }`}
                       >
                         {r.isBlock ? "blocked" : r.paid ? "paid" : "booked"}
                       </span>
@@ -407,33 +427,37 @@ export default function AdminPage() {
                       className="hide-sm"
                       dangerouslySetInnerHTML={{
                         __html: r.paymentId
-                          ? escapeHtml(r.paymentId as string)
+                          ? escapeHtml(r.paymentId)
                           : '<span class="muted">—</span>',
                       }}
                     />
                     <td className="actions">
                       {r.isBlock ? (
-                        <button
-                          className="btn ghost"
-                          onClick={() => unblock(r.date, r.time, r.durationMin || undefined)}
-                        >
-                          Unblock
-                        </button>
-                      ) : (
                         <>
                           <button
                             className="btn soft"
-                            onClick={() => reschedule(r.date, r.time, r.durationMin)}
+                            onClick={() =>
+                              moveBlock(r.date, r.time, r.durationMin || undefined)
+                            }
                           >
                             Edit
                           </button>
                           <button
-                            className="btn danger"
-                            onClick={() => cancel(r.date, r.time)}
+                            className="btn ghost"
+                            onClick={() =>
+                              unblock(r.date, r.time, r.durationMin || undefined)
+                            }
                           >
-                            Cancel
+                            Unblock
                           </button>
                         </>
+                      ) : (
+                        <button
+                          className="btn danger"
+                          onClick={() => cancel(r.date, r.time)}
+                        >
+                          Cancel
+                        </button>
                       )}
                     </td>
                   </tr>

@@ -66,9 +66,8 @@ export async function POST(req: Request) {
   try {
     const body = (await req.json().catch(() => null)) as {
       date?: string; time?: string; name?: string; phone?: string;
-      action?: "admin-block" | "block-day" | "unblock-day" | "admin-unblock" | "admin-reschedule";
+      action?: "admin-block" | "block-day" | "unblock-day" | "admin-unblock" | "admin-move-block";
       durationMin?: number; serviceTitle?: string; price?: string;
-      // для рескейджлу:
       newDate?: string; newTime?: string; newDurationMin?: number;
     } | null;
 
@@ -84,9 +83,7 @@ export async function POST(req: Request) {
     const isAdmin = !!adminKey && adminKey === process.env.ADMIN_KEY;
 
     const removed = pruneUnpaid(day);
-    if (removed) {
-      await setDay(day);
-    }
+    if (removed) await setDay(day);
 
     const action = body?.action;
 
@@ -110,6 +107,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true }, { status: 200, headers: noCache });
     }
 
+    // інші дії вимагають time
     const time = body?.time?.trim();
     if (!time) return NextResponse.json({ error: "time required" }, { status: 400, headers: noCache });
 
@@ -132,6 +130,7 @@ export async function POST(req: Request) {
       await notifyTelegram(`⛔️ Interval blocked by admin\nDate: ${date}\nStart: ${time} (${durationMin} minutes)`);
       return NextResponse.json({ ok: true }, { status: 200, headers: noCache });
     }
+
     if (isAdmin && action === "admin-unblock") {
       const durFromBody = Number(body?.durationMin) || 0;
       const inferred = inferBlockedDuration(day.blocked ?? [], time);
@@ -143,77 +142,49 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true }, { status: 200, headers: noCache });
     }
 
-    // ==== ADMIN: reschedule existing booking (без нових файлів) ====
-    if (isAdmin && action === "admin-reschedule") {
-      const oldTime = time;
-      const targetDate = (body?.newDate?.trim()) || date;
+    // ==== ADMIN: move existing admin block ====
+    if (isAdmin && action === "admin-move-block") {
+      const oldDur = Number(body?.durationMin) || inferBlockedDuration(day.blocked ?? [], time);
+      if (!oldDur) {
+        return NextResponse.json({ error: "block not found" }, { status: 404, headers: noCache });
+      }
+
+      const newDate = (body?.newDate?.trim()) || date;
       const newTime = (body?.newTime?.trim()) || "";
-      if (!newTime) {
-        return NextResponse.json({ error: "newTime required" }, { status: 400, headers: noCache });
-      }
-
-      // знайти бронювання у «старому» дні
-      const oldDay = day;
-      const idx = (oldDay.bookings ?? []).findIndex((b) => b.time === oldTime);
-      if (idx < 0) {
-        return NextResponse.json({ error: "booking not found" }, { status: 404, headers: noCache });
-      }
-
-      const original = oldDay.bookings[idx];
-      const candidateDur = Math.max(
-        5,
-        Math.min(8 * 60, Number(body?.newDurationMin ?? original.durationMin ?? SERVICE_DURATION))
-      );
-
-      if (!isStartWithinWorkingHours(newTime, candidateDur)) {
+      const newDur = Math.max(5, Math.min(8 * 60, Number(body?.newDurationMin || oldDur)));
+      if (!newTime) return NextResponse.json({ error: "newTime required" }, { status: 400, headers: noCache });
+      if (!isStartWithinWorkingHours(newTime, newDur))
         return NextResponse.json({ error: "outside working hours" }, { status: 400, headers: noCache });
+
+      // remove old span from current day
+      const oldSpan = rangeTimes(time, oldDur);
+      day.blocked = (day.blocked ?? []).filter((t) => !oldSpan.includes(t));
+      await setDay(day);
+
+      // add new span to target day (with conflict check)
+      const rawTarget = await store.get(newDate, { type: "json" as const });
+      const targetDay: DayData = (rawTarget as DayData | null) ?? { blocked: [], bookings: [] };
+      const targetOccupied = new Set<string>([
+        ...(targetDay.blocked ?? []),
+        ...(targetDay.bookings ?? []).flatMap((b) => rangeTimes(b.time, b.durationMin ?? SERVICE_DURATION)),
+      ]);
+      const newSpan = rangeTimes(newTime, newDur);
+      const hasConflict = newSpan.some((t) => targetOccupied.has(t));
+      if (hasConflict) {
+        // rollback old
+        const rb = await store.get(date, { type: "json" as const });
+        const rbDay: DayData = (rb as DayData | null) ?? { blocked: [], bookings: [] };
+        rbDay.blocked = Array.from(new Set([...(rbDay.blocked ?? []), ...oldSpan])).sort();
+        await store.set(date, JSON.stringify(rbDay));
+        return NextResponse.json({ error: "conflict" }, { status: 409, headers: noCache });
       }
 
-      const newSpan = rangeTimes(newTime, candidateDur);
-
-      if (targetDate === date) {
-        // перевірка конфліктів у межах того ж дня (ігноруємо поточну бронь)
-        const occSameDay = new Set<string>([
-          ...(oldDay.blocked ?? []),
-          ...(oldDay.bookings ?? [])
-            .filter((_, i) => i !== idx)
-            .flatMap((b) => rangeTimes(b.time, b.durationMin ?? SERVICE_DURATION)),
-        ]);
-        if (newSpan.some((t) => occSameDay.has(t))) {
-          return NextResponse.json({ error: "conflict" }, { status: 409, headers: noCache });
-        }
-
-        oldDay.bookings[idx] = { ...original, time: newTime, durationMin: candidateDur };
-        await setDay(oldDay);
-      } else {
-        // перенос на інший день
-        const rawTarget = await store.get(targetDate, { type: "json" as const });
-        const targetDay: DayData = (rawTarget as DayData | null) ?? { blocked: [], bookings: [] };
-
-        const occupiedTarget = new Set<string>([
-          ...(targetDay.blocked ?? []),
-          ...(targetDay.bookings ?? []).flatMap((b) => rangeTimes(b.time, b.durationMin ?? SERVICE_DURATION)),
-        ]);
-        if (newSpan.some((t) => occupiedTarget.has(t))) {
-          return NextResponse.json({ error: "conflict" }, { status: 409, headers: noCache });
-        }
-
-        // забираємо зі старого дня, додаємо у новий
-        oldDay.bookings.splice(idx, 1);
-        await setDay(oldDay);
-
-        targetDay.bookings = [...(targetDay.bookings ?? []), { ...original, time: newTime, durationMin: candidateDur }];
-        await store.set(targetDate, JSON.stringify(targetDay));
-      }
+      targetDay.blocked = Array.from(new Set([...(targetDay.blocked ?? []), ...newSpan])).sort();
+      await store.set(newDate, JSON.stringify(targetDay));
 
       await notifyTelegram(
-        `🕒 BOOKING RESCHEDULED by admin` +
-          `\nFrom: ${date} ${oldTime}` +
-          `\nTo:   ${targetDate} ${newTime} (${candidateDur}m)` +
-          `\nName: ${original.name}` +
-          `\nPhone: ${original.phone ?? ""}`
+        `🕒 BLOCK MOVED by admin\nFrom: ${date} ${time} (${oldDur}m)\nTo:   ${newDate} ${newTime} (${newDur}m)`
       );
-
       return NextResponse.json({ ok: true }, { status: 200, headers: noCache });
     }
 
@@ -238,7 +209,6 @@ export async function POST(req: Request) {
     };
 
     day.bookings = [...(day.bookings ?? []), booking];
-
     await setDay(day);
 
     await notifyTelegram(
