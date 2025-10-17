@@ -1,4 +1,3 @@
-// app/api/book/route.ts
 import { NextResponse } from "next/server";
 import { getStore } from "@netlify/blobs";
 import { notifyTelegram } from "../../../lib/notify";
@@ -30,7 +29,6 @@ const noCache: Record<string, string> = {
   "Cache-Control": "no-store, no-cache, must-revalidate",
   Pragma: "no-cache",
   Expires: "0",
-  Vary: "x-admin-key",
 };
 
 // ---- utils ----
@@ -62,13 +60,13 @@ function pruneUnpaid(day: DayData) {
   return before - day.bookings.length;
 }
 
+// SECURITY: auth вимкнено на запит користувача (адмін дії без пароля)
 export async function POST(req: Request) {
   try {
     const body = (await req.json().catch(() => null)) as {
       date?: string; time?: string; name?: string; phone?: string;
-      action?: "admin-block" | "block-day" | "unblock-day" | "admin-unblock" | "admin-move-block";
+      action?: "admin-block" | "block-day" | "unblock-day" | "admin-unblock";
       durationMin?: number; serviceTitle?: string; price?: string;
-      newDate?: string; newTime?: string; newDurationMin?: number;
     } | null;
 
     const date = body?.date?.trim();
@@ -79,16 +77,12 @@ export async function POST(req: Request) {
     const day: DayData = (raw as DayData | null) ?? { blocked: [], bookings: [] };
     const setDay = async (obj: DayData) => { await store.set(date, JSON.stringify(obj)); };
 
-    const adminKey = (req.headers.get("x-admin-key") || "").trim();
-    const isAdmin = !!adminKey && adminKey === process.env.ADMIN_KEY;
-
-    const removed = pruneUnpaid(day);
-    if (removed) await setDay(day);
+    pruneUnpaid(day);
 
     const action = body?.action;
 
     // ==== ADMIN: block/unblock whole day ====
-    if (action === "block-day" && isAdmin) {
+    if (action === "block-day") {
       const all: string[] = [];
       for (let h = WORK_START; h < WORK_END; h++)
         for (let m = 0; m < 60; m += SLOT_MINUTES)
@@ -99,7 +93,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true }, { status: 200, headers: noCache });
     }
 
-    if (action === "unblock-day" && isAdmin) {
+    if (action === "unblock-day") {
       day.blocked = [];
       day.bookings = [];
       await setDay(day);
@@ -107,7 +101,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true }, { status: 200, headers: noCache });
     }
 
-    // інші дії вимагають time
     const time = body?.time?.trim();
     if (!time) return NextResponse.json({ error: "time required" }, { status: 400, headers: noCache });
 
@@ -123,15 +116,14 @@ export async function POST(req: Request) {
     const conflict = span.some((t) => occupied.has(t));
 
     // ==== ADMIN: block/unblock interval ====
-    if (isAdmin && action === "admin-block") {
+    if (action === "admin-block") {
       if (conflict) return NextResponse.json({ error: "conflict" }, { status: 409, headers: noCache });
       day.blocked = Array.from(new Set([...(day.blocked ?? []), ...span])).sort();
       await setDay(day);
       await notifyTelegram(`⛔️ Interval blocked by admin\nDate: ${date}\nStart: ${time} (${durationMin} minutes)`);
       return NextResponse.json({ ok: true }, { status: 200, headers: noCache });
     }
-
-    if (isAdmin && action === "admin-unblock") {
+    if (action === "admin-unblock") {
       const durFromBody = Number(body?.durationMin) || 0;
       const inferred = inferBlockedDuration(day.blocked ?? [], time);
       const effectiveDur = Math.max(SLOT_MINUTES, durFromBody || inferred || SLOT_MINUTES);
@@ -139,52 +131,6 @@ export async function POST(req: Request) {
       day.blocked = (day.blocked ?? []).filter((t) => !spanToRemove.includes(t));
       await setDay(day);
       await notifyTelegram(`✅ Interval unblocked by admin\nDate: ${date}\nStart: ${time} (${effectiveDur} minutes)`);
-      return NextResponse.json({ ok: true }, { status: 200, headers: noCache });
-    }
-
-    // ==== ADMIN: move existing admin block ====
-    if (isAdmin && action === "admin-move-block") {
-      const oldDur = Number(body?.durationMin) || inferBlockedDuration(day.blocked ?? [], time);
-      if (!oldDur) {
-        return NextResponse.json({ error: "block not found" }, { status: 404, headers: noCache });
-      }
-
-      const newDate = (body?.newDate?.trim()) || date;
-      const newTime = (body?.newTime?.trim()) || "";
-      const newDur = Math.max(5, Math.min(8 * 60, Number(body?.newDurationMin || oldDur)));
-      if (!newTime) return NextResponse.json({ error: "newTime required" }, { status: 400, headers: noCache });
-      if (!isStartWithinWorkingHours(newTime, newDur))
-        return NextResponse.json({ error: "outside working hours" }, { status: 400, headers: noCache });
-
-      // remove old span from current day
-      const oldSpan = rangeTimes(time, oldDur);
-      day.blocked = (day.blocked ?? []).filter((t) => !oldSpan.includes(t));
-      await setDay(day);
-
-      // add new span to target day (with conflict check)
-      const rawTarget = await store.get(newDate, { type: "json" as const });
-      const targetDay: DayData = (rawTarget as DayData | null) ?? { blocked: [], bookings: [] };
-      const targetOccupied = new Set<string>([
-        ...(targetDay.blocked ?? []),
-        ...(targetDay.bookings ?? []).flatMap((b) => rangeTimes(b.time, b.durationMin ?? SERVICE_DURATION)),
-      ]);
-      const newSpan = rangeTimes(newTime, newDur);
-      const hasConflict = newSpan.some((t) => targetOccupied.has(t));
-      if (hasConflict) {
-        // rollback old
-        const rb = await store.get(date, { type: "json" as const });
-        const rbDay: DayData = (rb as DayData | null) ?? { blocked: [], bookings: [] };
-        rbDay.blocked = Array.from(new Set([...(rbDay.blocked ?? []), ...oldSpan])).sort();
-        await store.set(date, JSON.stringify(rbDay));
-        return NextResponse.json({ error: "conflict" }, { status: 409, headers: noCache });
-      }
-
-      targetDay.blocked = Array.from(new Set([...(targetDay.blocked ?? []), ...newSpan])).sort();
-      await store.set(newDate, JSON.stringify(targetDay));
-
-      await notifyTelegram(
-        `🕒 BLOCK MOVED by admin\nFrom: ${date} ${time} (${oldDur}m)\nTo:   ${newDate} ${newTime} (${newDur}m)`
-      );
       return NextResponse.json({ ok: true }, { status: 200, headers: noCache });
     }
 

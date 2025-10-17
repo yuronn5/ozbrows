@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import "./admin.css";
 
+/* ---------- types ---------- */
 type Row = {
   date: string;
   time: string;
@@ -27,9 +28,9 @@ function escapeHtml(str: string) {
   return (str || "").replace(
     /[&<>"']/g,
     (s) =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[
-        s
-      ]!)
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" } as const)[
+        s as "&" | "<" | ">" | '"' | "'"
+      ]
   );
 }
 function fmtDuration(min?: number) {
@@ -55,7 +56,47 @@ function addMinutes(t: string, delta: number) {
   return minToTime(parseTimeToMin(t) + delta);
 }
 
+/* ---------- thin fetch helper (без any) ---------- */
+function isErrorResponse(x: unknown): x is { error: string } {
+  if (typeof x !== "object" || x === null) return false;
+  const e = (x as { error?: unknown }).error;
+  return typeof e === "string" && e.trim().length > 0;
+}
+async function api<T>(
+  path: string,
+  options?: RequestInit & { query?: Record<string, string> }
+): Promise<T> {
+  let url = `${API_BASE}${path}`;
+  if (options?.query) {
+    const u = new URL(url, location.origin);
+    for (const [k, v] of Object.entries(options.query)) u.searchParams.set(k, v);
+    // bust cache
+    u.searchParams.set("_", String(Date.now()));
+    url = u.toString();
+  }
+
+  const res = await fetch(url, {
+    cache: "no-store",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options?.headers ?? {}),
+    },
+  });
+
+  const json: unknown = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = isErrorResponse(json) ? json.error : "API error";
+    throw new Error(msg);
+  }
+  return json as T;
+}
+
+/* =========================================
+   PAGE
+========================================= */
 export default function AdminPage() {
+  /* range loader */
   const [from, setFrom] = useState(() => toISO(new Date()));
   const [to, setTo] = useState(() => {
     const d = new Date();
@@ -65,12 +106,12 @@ export default function AdminPage() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Admin blocks panel: Date + Start + End
+  /* Admin blocks: Date + Start + End */
   const [blockDate, setBlockDate] = useState<string>(() => toISO(new Date()));
   const [blockStart, setBlockStart] = useState<string>("08:00");
   const [blockEnd, setBlockEnd] = useState<string>("08:45");
 
-  // коли міняємо Start — якщо End <= Start, автоматом підставимо +45 хв
+  // якщо End <= Start — автододаємо +45 хв
   useEffect(() => {
     if (!validTimeStr(blockStart) || !validTimeStr(blockEnd)) return;
     const s = parseTimeToMin(blockStart);
@@ -78,84 +119,22 @@ export default function AdminPage() {
     if (e <= s) setBlockEnd(addMinutes(blockStart, 45));
   }, [blockStart]);
 
-  /* ---------- admin key + api ---------- */
-  async function ensureAdminKey(): Promise<string> {
-    let key =
-      typeof window !== "undefined"
-        ? sessionStorage.getItem("ADMIN_KEY") || ""
-        : "";
-    if (!key) {
-      const pin =
-        typeof window !== "undefined" ? prompt("Enter admin PIN") || "" : "";
-      if (!pin) throw new Error("Canceled");
-      key = pin;
-      sessionStorage.setItem("ADMIN_KEY", key);
-    }
-    return key;
-  }
-
-  async function api<T>(
-    path: string,
-    params?: Record<string, string>,
-    method: "GET" | "POST" = "GET",
-    body?: unknown
-  ): Promise<T> {
-    let key = await ensureAdminKey();
-
-    const doFetch = async (k: string): Promise<Response> => {
-      let url = `${API_BASE}${path}`;
-      if (method === "GET" && params && Object.keys(params).length) {
-        const u = new URL(url, location.origin);
-        Object.entries(params).forEach(([kk, v]) => u.searchParams.set(kk, v));
-        u.searchParams.set("_", String(Date.now()));
-        url = u.toString();
-      }
-      return fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json", "X-Admin-Key": k },
-        body: body ? JSON.stringify(body) : null,
-        cache: "no-store",
-      });
-    };
-
-    let res = await doFetch(key);
-    if (res.status === 401) {
-      sessionStorage.removeItem("ADMIN_KEY");
-      key = await ensureAdminKey();
-      res = await doFetch(key);
-    }
-
-    const json: unknown = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      let msg = "API error";
-      if (typeof json === "object" && json !== null && "error" in json) {
-        const val = (json as Record<string, unknown>).error;
-        if (typeof val === "string" && val.trim()) msg = val;
-      }
-      throw new Error(msg);
-    }
-    return json as T;
-  }
-
   /* ---------- actions ---------- */
   async function load() {
     try {
       setLoading(true);
-      const data = await api<{ rows: Row[] }>(
-        "/admin-list",
-        { start: from, end: to },
-        "GET"
-      );
+      const data = await api<{ rows: Row[] }>("/admin-list", {
+        method: "GET",
+        query: { start: from, end: to },
+      });
       setRows(
         (data.rows || []).sort(
           (a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time)
         )
       );
     } catch (e) {
-      if ((e as Error).message !== "Canceled") {
-        alert((e as Error).message || "Failed to load");
-        console.error(e);
-      }
+      alert(e instanceof Error ? e.message : "Failed to load");
+      console.error(e);
     } finally {
       setLoading(false);
     }
@@ -164,7 +143,10 @@ export default function AdminPage() {
   async function cancel(date: string, time: string) {
     if (!confirm(`Cancel booking on ${date} at ${time}?`)) return;
     try {
-      await api<{ ok: true }>("/admin-cancel", {}, "POST", { date, time });
+      await api<{ ok: true }>("/admin-cancel", {
+        method: "POST",
+        body: JSON.stringify({ date, time }),
+      });
       setRows((prev) =>
         prev.filter((r) => !(r.date === date && r.time === time && !r.isBlock))
       );
@@ -178,11 +160,14 @@ export default function AdminPage() {
     if (!confirm(`Unblock ${date} from ${time} (${fmtDuration(durationMin)})?`))
       return;
     try {
-      await api<{ ok: true }>("/book", {}, "POST", {
-        action: "admin-unblock",
-        date,
-        time,
-        durationMin,
+      await api<{ ok: true }>("/book", {
+        method: "POST",
+        body: JSON.stringify({
+          action: "admin-unblock",
+          date,
+          time,
+          durationMin,
+        }),
       });
       setRows((prev) =>
         prev.filter((r) => !(r.isBlock && r.date === date && r.time === time))
@@ -193,7 +178,7 @@ export default function AdminPage() {
     }
   }
 
-  // EDIT: move admin block → new date + new start + new end
+  // Edit (move) admin block: change date + start + end
   async function moveBlock(date: string, time: string, defDur?: number) {
     const nd = prompt("New date (YYYY-MM-DD):", date)?.trim();
     if (!nd) return;
@@ -214,14 +199,17 @@ export default function AdminPage() {
     const ndur = e - s;
 
     try {
-      await api<{ ok: true }>("/book", {}, "POST", {
-        action: "admin-move-block",
-        date,
-        time,
-        durationMin: defDur, // допомагає точно зняти старий інтервал
-        newDate: nd,
-        newTime: ns,
-        newDurationMin: ndur,
+      await api<{ ok: true }>("/book", {
+        method: "POST",
+        body: JSON.stringify({
+          action: "admin-move-block",
+          date,
+          time,
+          durationMin: defDur, // допоможе акуратно зняти старий інтервал
+          newDate: nd,
+          newTime: ns,
+          newDurationMin: ndur,
+        }),
       });
 
       // optimistic update
@@ -254,13 +242,9 @@ export default function AdminPage() {
     }
   }
 
-  // блокування інтервалу за Start+End
+  // Block new interval by Start+End
   async function blockInterval() {
-    if (
-      !blockDate ||
-      !validTimeStr(blockStart) ||
-      !validTimeStr(blockEnd)
-    ) {
+    if (!blockDate || !validTimeStr(blockStart) || !validTimeStr(blockEnd)) {
       alert("Set date, Start and End in HH:MM.");
       return;
     }
@@ -273,11 +257,14 @@ export default function AdminPage() {
     const durationMin = e - s;
 
     try {
-      await api<{ ok: true }>("/book", {}, "POST", {
-        action: "admin-block",
-        date: blockDate,
-        time: blockStart,
-        durationMin,
+      await api<{ ok: true }>("/book", {
+        method: "POST",
+        body: JSON.stringify({
+          action: "admin-block",
+          date: blockDate,
+          time: blockStart,
+          durationMin,
+        }),
       });
       alert(`Blocked ${blockStart}–${blockEnd} (${durationMin}m) on ${blockDate}`);
     } catch (e) {
@@ -290,9 +277,9 @@ export default function AdminPage() {
     if (!blockDate) return;
     if (!confirm(`Block the whole day ${blockDate}?`)) return;
     try {
-      await api<{ ok: true }>("/book", {}, "POST", {
-        action: "block-day",
-        date: blockDate,
+      await api<{ ok: true }>("/book", {
+        method: "POST",
+        body: JSON.stringify({ action: "block-day", date: blockDate }),
       });
       alert(`Day ${blockDate} blocked`);
     } catch (e) {
@@ -300,13 +287,14 @@ export default function AdminPage() {
       console.error(e);
     }
   }
+
   async function unblockWholeDay() {
     if (!blockDate) return;
     if (!confirm(`Unblock the whole day ${blockDate}?`)) return;
     try {
-      await api<{ ok: true }>("/book", {}, "POST", {
-        action: "unblock-day",
-        date: blockDate,
+      await api<{ ok: true }>("/book", {
+        method: "POST",
+        body: JSON.stringify({ action: "unblock-day", date: blockDate }),
       });
       alert(`Day ${blockDate} unblocked`);
     } catch (e) {
@@ -321,6 +309,7 @@ export default function AdminPage() {
       <div className="card">
         <h1>Admin — Bookings</h1>
 
+        {/* Range loader */}
         <div className="toolbar">
           <label>
             From
@@ -339,12 +328,12 @@ export default function AdminPage() {
             />
           </label>
 
-        <button className="btn primary" onClick={load} disabled={loading}>
+          <button className="btn primary" onClick={load} disabled={loading}>
             {loading ? "Loading…" : "Load"}
           </button>
         </div>
 
-        {/* Admin blocks panel (Start + End) */}
+        {/* Admin blocks: Start + End */}
         <div className="toolbar blocks">
           <strong>Admin blocks</strong>
           <label>
@@ -387,6 +376,7 @@ export default function AdminPage() {
           </div>
         </div>
 
+        {/* Table */}
         <div className="table-wrap">
           <table className="table">
             <thead>
@@ -412,9 +402,7 @@ export default function AdminPage() {
               ) : (
                 rows.map((r) => (
                   <tr
-                    key={`${r.date}-${r.time}-${r.name}-${r.phone}-${
-                      r.isBlock ? "blk" : "bk"
-                    }`}
+                    key={`${r.date}-${r.time}-${r.name}-${r.phone}-${r.isBlock ? "blk" : "bk"}`}
                   >
                     <td>{r.date}</td>
                     <td>{r.time}</td>
@@ -465,11 +453,7 @@ export default function AdminPage() {
                           <button
                             className="btn soft"
                             onClick={() =>
-                              moveBlock(
-                                r.date,
-                                r.time,
-                                r.durationMin || undefined
-                              )
+                              moveBlock(r.date, r.time, r.durationMin || undefined)
                             }
                           >
                             Edit

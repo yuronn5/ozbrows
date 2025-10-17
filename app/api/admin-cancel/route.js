@@ -1,16 +1,13 @@
 import { NextResponse } from "next/server";
 import { getStore } from "@netlify/blobs";
 
-const WORK_START = 8,
-  WORK_END = 20;
-const SLOT_MINUTES = 15,
-  SERVICE_DURATION = 45;
+const WORK_START = 8, WORK_END = 20;
+const SLOT_MINUTES = 15, SERVICE_DURATION = 45;
 
 const noCache = {
   "Cache-Control": "no-store, no-cache, must-revalidate",
   Pragma: "no-cache",
   Expires: "0",
-  Vary: "x-admin-key",
 };
 
 function parseTime(t) {
@@ -18,11 +15,9 @@ function parseTime(t) {
   return h * 60 + m;
 }
 function toTime(min) {
-  const h = Math.floor(min / 60),
-    m = min % 60;
+  const h = Math.floor(min / 60), m = min % 60;
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
-
 function rangeTimes(startStr, dur = SERVICE_DURATION, step = SLOT_MINUTES) {
   const start = parseTime(startStr);
   const end = Math.min(start + dur, WORK_END * 60);
@@ -33,14 +28,12 @@ function rangeTimes(startStr, dur = SERVICE_DURATION, step = SLOT_MINUTES) {
   }
   return out;
 }
-
 function fmtDuration(min) {
   const m = Math.max(0, Number(min) || 0);
   const h = Math.floor(m / 60);
   const mm = m % 60;
   return h ? `${h}h${mm ? ` ${mm}m` : ""}` : `${mm}m`;
 }
-
 async function notifyTelegram(text) {
   if (process.env.NODE_ENV !== "production") return;
   const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -57,15 +50,6 @@ async function notifyTelegram(text) {
 
 export async function POST(req) {
   try {
-    const adminKey = (req.headers.get("x-admin-key") || "").trim();
-    const isAdmin = !!adminKey && adminKey === process.env.ADMIN_KEY;
-    if (!isAdmin) {
-      return NextResponse.json(
-        { error: "unauthorized" },
-        { status: 401, headers: noCache }
-      );
-    }
-
     const body = await req.json().catch(() => ({}));
     const date = body?.date;
     const time = body?.time;

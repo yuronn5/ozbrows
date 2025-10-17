@@ -1,4 +1,3 @@
-// app/api/admin-list/route.ts
 import { NextResponse } from "next/server";
 import { getStore } from "@netlify/blobs";
 
@@ -6,7 +5,6 @@ const noCache = {
   "Cache-Control": "no-store, no-cache, must-revalidate",
   Pragma: "no-cache",
   Expires: "0",
-  Vary: "x-admin-key",
 };
 
 const STEP = 15;
@@ -26,10 +24,7 @@ type Booking = {
   price: string;
 };
 
-type DayData = {
-  blocked: string[];
-  bookings: Booking[];
-};
+type DayData = { blocked: string[]; bookings: Booking[] };
 
 type Row = {
   date: string;
@@ -96,9 +91,7 @@ function coerceDayData(raw: unknown): DayData {
     : [];
 
   const bookings: Booking[] = Array.isArray(raw.bookings)
-    ? raw.bookings
-        .map(coerceBooking)
-        .filter((b): b is Booking => b !== null)
+    ? raw.bookings.map(coerceBooking).filter((b): b is Booking => b !== null)
     : [];
 
   return { blocked, bookings };
@@ -151,12 +144,6 @@ export async function GET(req: Request) {
     const start = searchParams.get("start") ?? "";
     const end = searchParams.get("end") ?? "";
 
-    const adminKey = (req.headers.get("x-admin-key") || "").trim();
-    const isAdmin = !!adminKey && adminKey === process.env.ADMIN_KEY;
-    if (!isAdmin) {
-      return NextResponse.json({ error: "unauthorized" }, { status: 401, headers: noCache });
-    }
-
     if (!start || !end || !isDateStr(start) || !isDateStr(end)) {
       return NextResponse.json(
         { error: "start & end (YYYY-MM-DD) required" },
@@ -167,7 +154,6 @@ export async function GET(req: Request) {
     const store = getStore({ name: "bookings" });
     const rows: Row[] = [];
 
-    // ✅ Правильна пагінація без cursor
     for await (const page of store.list({ paginate: true })) {
       if (!isListPage(page)) continue;
 
@@ -179,7 +165,7 @@ export async function GET(req: Request) {
         const rawDay = await store.get(key, { type: "json" as const });
         const day = coerceDayData(rawDay);
 
-        // TTL cleanup for holds (збережемо зміни, якщо були)
+        // TTL cleanup for holds
         let changed = false;
         if (HOLD_TTL_MIN > 0) {
           const cutoff = Date.now() - HOLD_TTL_MIN * 60 * 1000;
@@ -187,11 +173,9 @@ export async function GET(req: Request) {
           day.bookings = day.bookings.filter((b) => b.paid || (b.createdAt ?? 0) > cutoff);
           if (day.bookings.length !== before) changed = true;
         }
-        if (changed) {
-          await store.set(key, JSON.stringify(day));
-        }
+        if (changed) await store.set(key, JSON.stringify(day));
 
-        // додати бронювання
+        // bookings
         for (const b of day.bookings) {
           rows.push({
             date: key,
@@ -207,7 +191,7 @@ export async function GET(req: Request) {
           });
         }
 
-        // додати блоки (без слотів, що перекривають чинні броні)
+        // blocks
         const blockedSet = new Set(day.blocked);
         for (const b of day.bookings) {
           const pts = spanTimes(b.time, b.durationMin);
