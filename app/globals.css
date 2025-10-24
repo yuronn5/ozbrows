@@ -912,11 +912,12 @@ section.contact {
 .hero__stats span{ color: rgba(255,255,255,.8); font-size: 14px; }
 
 html { -webkit-text-size-adjust: 100%; }
+
 @media (max-width: 768px) {
   input, select, textarea, button {
-    font-size: 16px;           
+    font-size: 16px !important;
     line-height: 1.2;
-    min-height: 44px;          
+    min-height: 44px; /* зручно для тапу */
   }
 
   input[type="date"],
@@ -926,14 +927,25 @@ html { -webkit-text-size-adjust: 100%; }
   input[type="number"],
   input[type="email"],
   input[type="tel"],
-  input[type="search"] {
-    font-size: 16px;
+  input[type="search"],
+  input[type="password"],
+  input[type="url"],
+  input[type="text"] {
+    font-size: 16px !important;
   }
 
   .testimonials__wrap button {
     min-height: unset;
   }
 }
+
 @supports (-webkit-touch-callout: none) {
-  input, select, textarea { font-size: 16px; }
+  input, select, textarea, button { font-size: 16px !important; }
+}
+
+.fc *,
+.booking__card input,
+.booking__card select,
+.booking__card button {
+  font-size: 16px;
 }
