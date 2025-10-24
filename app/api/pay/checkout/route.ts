@@ -1,19 +1,18 @@
 // app/api/pay/checkout/route.ts
-import { NextResponse } from "next/server";
 import Stripe from "stripe";
+import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const noCache: Record<string, string> = {
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+
+const noCache = {
   "Cache-Control": "no-store, no-cache, must-revalidate",
   Pragma: "no-cache",
   Expires: "0",
 };
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-
-// ---- utils ----
 function parseUsdToCents(s?: string): number | null {
   if (!s) return null;
   const m = String(s).match(/\d+(?:\.\d{1,2})?/);
@@ -30,6 +29,7 @@ export async function POST(req: Request) {
       phone?: string;
       serviceTitle?: string;
       price?: string;
+      durationMin?: number;
     } | null;
 
     if (!body?.date || !body?.time || !body?.bookingId) {
@@ -41,7 +41,6 @@ export async function POST(req: Request) {
 
     const fullPriceCents = parseUsdToCents(body.price);
     const isSmallFull = fullPriceCents === 2500 || fullPriceCents === 1000;
-
     const amount = isSmallFull ? (fullPriceCents as number) : depositDefault;
 
     const origin = new URL(req.url).origin;
@@ -54,6 +53,7 @@ export async function POST(req: Request) {
       phone: body.phone || "",
       serviceTitle: body.serviceTitle || "",
       price: body.price || "",
+      durationMin: String(body.durationMin ?? 45),
       amount_cents: String(amount),
       charge_type: isSmallFull ? "full_small_service" : "deposit",
     };
@@ -76,9 +76,7 @@ export async function POST(req: Request) {
           quantity: 1,
         },
       ],
-      // success -> thank-you з session id
       success_url: `${origin}/thank-you?cs={CHECKOUT_SESSION_ID}`,
-      // cancel -> як було
       cancel_url: `${origin}/booking?cancelled=1`,
     });
 

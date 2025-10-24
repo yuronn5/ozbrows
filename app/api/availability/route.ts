@@ -5,7 +5,7 @@ import { getStore } from "@netlify/blobs";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type Booking = {
+interface Booking {
   id?: string;
   createdAt?: number;
   time: string;
@@ -16,13 +16,14 @@ type Booking = {
   durationMin?: number;
   serviceTitle?: string;
   price?: string;
-};
-
-type DayData = { blocked: string[]; bookings: Booking[] };
+}
+interface DayData {
+  blocked: string[];
+  bookings: Booking[];
+}
 
 const HOLD_TTL_MIN = 20;
-
-const noCache: Record<string, string> = {
+const noCache = {
   "Cache-Control": "no-store, no-cache, must-revalidate",
   Pragma: "no-cache",
   Expires: "0",
@@ -44,24 +45,14 @@ export async function GET(req: Request) {
     const raw = await store.get(date, { type: "json" as const });
     const day: DayData = (raw as DayData | null) ?? { blocked: [], bookings: [] };
 
-    let changed = false;
-    if (HOLD_TTL_MIN > 0) {
-      const cutoff = Date.now() - HOLD_TTL_MIN * 60 * 1000;
-      const before = day.bookings?.length ?? 0;
-      day.bookings = (day.bookings ?? []).filter((b) => b.paid || (b.createdAt ?? 0) > cutoff);
-      if ((day.bookings?.length ?? 0) !== before) changed = true;
-    }
-    if (changed) {
-      await store.set(date, JSON.stringify(day));
-    }
+    const cutoff = Date.now() - HOLD_TTL_MIN * 60 * 1000;
+    const visibleBookings = (day.bookings ?? []).filter(
+      (b) => b.paid || (b.createdAt ?? 0) > cutoff
+    );
 
     const safeBookings: Booking[] = isAdmin
-      ? day.bookings ?? []
-      : (day.bookings ?? []).map((b) => ({
-          time: b.time,
-          name: "Booked",
-          durationMin: b.durationMin ?? 45,
-        }));
+      ? visibleBookings
+      : visibleBookings.map((b) => ({ time: b.time, name: "Booked", durationMin: b.durationMin ?? 45 }));
 
     return new NextResponse(JSON.stringify({ blocked: day.blocked ?? [], bookings: safeBookings }), {
       status: 200,
