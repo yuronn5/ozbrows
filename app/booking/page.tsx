@@ -1,3 +1,4 @@
+// app/booking/page.tsx
 "use client";
 
 import { MouseEvent, useEffect, useRef, useState } from "react";
@@ -29,9 +30,13 @@ class HttpError extends Error {
     this.status = status;
   }
 }
-const SMALL_SERVICES_BY_ID: Record<string, { title: string; price: string; durationMin: number }> = {
+
+const SMALL_SERVICES_BY_ID: Record<
+  string,
+  { title: string; price: string; durationMin: number }
+> = {
   "wax-brows": { title: "Wax brows", price: "$25", durationMin: 15 },
-  "lip-wax":   { title: "Lip wax",   price: "$15", durationMin: 15 }, // якщо у тебе $10 — просто поміняй на "$10"
+  "lip-wax": { title: "Lip wax", price: "$15", durationMin: 15 },
 };
 
 /* ---------- time utils ---------- */
@@ -59,11 +64,7 @@ function genSlots(step = SLOT_MINUTES, durationMin = SERVICE_DURATION) {
   }
   return out;
 }
-function rangeTimes(
-  startTimeStr: string,
-  dur = SERVICE_DURATION,
-  step = SLOT_MINUTES
-) {
+function rangeTimes(startTimeStr: string, dur = SERVICE_DURATION, step = SLOT_MINUTES) {
   const startMin = parseTime(startTimeStr);
   const hardEnd = clampEnd(startMin + dur);
   let t = Math.ceil(startMin / step) * step;
@@ -104,9 +105,8 @@ function parseUsdToCentsLocal(s?: string): number | null {
   return m ? Math.round(parseFloat(m[0]) * 100) : null;
 }
 function getChargeCentsLocal(fullPriceCents?: number | null) {
-
   if (fullPriceCents === 2500 || fullPriceCents === 1500) return fullPriceCents;
-  return null; 
+  return null;
 }
 function fmtUSD(cents: number) {
   return `$${(cents / 100).toFixed(0)}`;
@@ -170,8 +170,7 @@ export default function BookingPage() {
     durationMin: number;
   }>(null);
 
-  const canPay =
-    !!selected && nameIsValid(name) && phoneIsValid(phone) && !busy;
+  const canPay = !!selected && nameIsValid(name) && phoneIsValid(phone) && !busy;
 
   const [flash, setFlash] = useState<null | {
     kind: "success" | "info" | "error";
@@ -196,26 +195,30 @@ export default function BookingPage() {
     } catch {}
   }, []);
 
+
   useEffect(() => {
-  const sp = new URLSearchParams(window.location.search);
-  const sid = sp.get("service");
-  if (!sid) return;
+    const sp = new URLSearchParams(window.location.search);
+    const sid = sp.get("service");
+    if (!sid) return;
 
-  const patch = SMALL_SERVICES_BY_ID[sid];
-  if (!patch) return;
+    const patch = SMALL_SERVICES_BY_ID[sid];
+    if (!patch) return;
 
-  setSelectedService((prev) => {
-    const next = {
-      title: prev?.title ?? patch.title,
-      price: patch.price,
-      durationMin: patch.durationMin,
-    };
-    try { localStorage.setItem("selectedService", JSON.stringify(next)); } catch {}
-    return next;
-  });
-  setSlots(genSlots(SLOT_MINUTES, patch.durationMin));
-}, []);
+    setSelectedService((prev) => {
+      const next = {
+        title: prev?.title ?? patch.title,
+        price: patch.price,
+        durationMin: patch.durationMin,
+      };
+      try {
+        localStorage.setItem("selectedService", JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+    setSlots(genSlots(SLOT_MINUTES, patch.durationMin));
+  }, []);
 
+  // слухач на "service:select" (з секції прайсів)
   useEffect(() => {
     const onPick = (e: Event) => {
       const det = (e as CustomEvent).detail as
@@ -237,26 +240,16 @@ export default function BookingPage() {
 
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
-    const paid = sp.get("paid");
     const cancelled = sp.get("cancelled");
 
-    if (paid === "1") {
-      try {
-        localStorage.removeItem("lastBooking");
-      } catch {}
-      setFlash({
-        kind: "success",
-        title: "Payment successful",
-        text: "Deposit received. Booking confirmed. ✅",
-      });
-    } else if (cancelled === "1") {
+    if (cancelled === "1") {
       setFlash({
         kind: "info",
         title: "Payment canceled",
         text: "Booking error. You can try again. The slot may still be available.",
       });
     }
-    if (paid || cancelled) {
+    if (cancelled) {
       window.history.replaceState({}, "", window.location.pathname);
     }
   }, []);
@@ -483,17 +476,9 @@ export default function BookingPage() {
     <>
       {/* Toast (mobile-first) */}
       {flash && (
-        <div
-          className={`toast toast--${flash.kind}`}
-          role="alert"
-          aria-live="polite"
-        >
+        <div className={`toast toast--${flash.kind}`} role="alert" aria-live="polite">
           <div className="toast__icon" aria-hidden>
-            {flash.kind === "success"
-              ? "✅"
-              : flash.kind === "error"
-              ? "⛔️"
-              : "ℹ️"}
+            {flash.kind === "success" ? "✅" : flash.kind === "error" ? "⛔️" : "ℹ️"}
           </div>
           <div className="toast__body">
             <div className="toast__title">{flash.title}</div>
@@ -505,11 +490,7 @@ export default function BookingPage() {
               Pay now
             </button>
           ) : (
-            <button
-              className="toast__close"
-              aria-label="Close"
-              onClick={() => setFlash(null)}
-            >
+            <button className="toast__close" aria-label="Close" onClick={() => setFlash(null)}>
               ✕
             </button>
           )}
@@ -521,7 +502,9 @@ export default function BookingPage() {
           <button
             type="button"
             className="back-home-btn"
-            onClick={() => { window.location.href = "https://ozhbrows.netlify.app/"; }}
+            onClick={() => {
+              window.location.href = "/";
+            }}
           >
             <span className="icon">
               <ChevronLeft size={20} />
@@ -537,22 +520,14 @@ export default function BookingPage() {
         </div>
 
         <div className="booking__wrap">
-          <div
-            className="booking__card"
-            aria-label="Calendar for choosing a date"
-          >
+          <div className="booking__card" aria-label="Calendar for choosing a date">
             <div ref={calRef} />
           </div>
         </div>
 
         {/* Modal */}
         {dateStr && (
-          <div
-            className="modal open"
-            onClick={onModalBgClick}
-            aria-modal="true"
-            role="dialog"
-          >
+          <div className="modal open" onClick={onModalBgClick} aria-modal="true" role="dialog">
             <div className="sheet" role="document">
               {/* HEADER */}
               <div className="sheet__header">
@@ -563,8 +538,7 @@ export default function BookingPage() {
                   <h3 className="sheet__title">Choose a time</h3>
                   <div className="sheet__sub">
                     {prettyDate}
-                    <span className="dot">•</span> Working hours:{" "}
-                    <b>08:00–20:00</b>
+                    <span className="dot">•</span> Working hours: <b>08:00–20:00</b>
                     <span className="dot">•</span> <b>{durationNow}m</b>
                   </div>
                 </div>
@@ -579,9 +553,7 @@ export default function BookingPage() {
                       Name
                       <input
                         value={name}
-                        onChange={(e) =>
-                          setName(sanitizeNameInput(e.target.value))
-                        }
+                        onChange={(e) => setName(sanitizeNameInput(e.target.value))}
                         onBlur={() => setNameTouched(true)}
                         placeholder="Name"
                         inputMode="text"
@@ -599,9 +571,7 @@ export default function BookingPage() {
                       Phone
                       <input
                         value={phone}
-                        onChange={(e) =>
-                          setPhone(sanitizePhoneInput(e.target.value))
-                        }
+                        onChange={(e) => setPhone(sanitizePhoneInput(e.target.value))}
                         onBlur={() => setPhoneTouched(true)}
                         inputMode="tel"
                         placeholder="+1 (555) 123-4567"
@@ -615,23 +585,17 @@ export default function BookingPage() {
                     )}
                   </div>
                 </div>
-                <div
-                  className="slots"
-                  role="listbox"
-                  aria-label="Available times"
-                >
+
+                <div className="slots" role="listbox" aria-label="Available times">
                   {slots.map((t) => {
-                    const disabled =
-                      isBlocked(t) || !fitsFrom(t) || overflows(t);
+                    const disabled = isBlocked(t) || !fitsFrom(t) || overflows(t);
                     const selectedNow = selected === t;
                     return (
                       <button
                         key={t}
                         role="option"
                         aria-selected={selectedNow}
-                        className={`slot${selectedNow ? " selected" : ""}${
-                          disabled ? " disabled" : ""
-                        }`}
+                        className={`slot${selectedNow ? " selected" : ""}${disabled ? " disabled" : ""}`}
                         onClick={() => !disabled && setSelected(t)}
                         disabled={disabled}
                       >
@@ -640,8 +604,6 @@ export default function BookingPage() {
                     );
                   })}
                 </div>
-
-                
 
                 {bookings?.length > 0 && (
                   <div className="admin-list">
@@ -669,11 +631,7 @@ export default function BookingPage() {
                 <button className="btn" onClick={() => setDateStr(null)}>
                   Close
                 </button>
-                <button
-                  className="btn primary"
-                  onClick={handleConfirm}
-                  disabled={!canPay}
-                >
+                <button className="btn primary" onClick={handleConfirm} disabled={!canPay}>
                   {buttonLabel}
                 </button>
               </div>

@@ -83,7 +83,7 @@ export async function POST(req: Request) {
           quantity: 1,
         },
       ],
-      success_url: `${origin}/booking?paid=1`,
+      success_url: `${origin}/thank-you`,
       cancel_url: `${origin}/booking?cancelled=1`,
     });
 
