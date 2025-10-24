@@ -36,7 +36,7 @@ const SMALL_SERVICES_BY_ID: Record<
   { title: string; price: string; durationMin: number }
 > = {
   "wax-brows": { title: "Wax brows", price: "$25", durationMin: 15 },
-  "lip-wax": { title: "Lip wax", price: "$15", durationMin: 15 },
+  "lip-wax": { title: "Lip wax", price: "$10", durationMin: 15 },
 };
 
 /* ---------- time utils ---------- */
