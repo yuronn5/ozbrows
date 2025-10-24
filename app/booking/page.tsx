@@ -105,7 +105,7 @@ function parseUsdToCentsLocal(s?: string): number | null {
   return m ? Math.round(parseFloat(m[0]) * 100) : null;
 }
 function getChargeCentsLocal(fullPriceCents?: number | null) {
-  if (fullPriceCents === 2500 || fullPriceCents === 1500) return fullPriceCents;
+  if (fullPriceCents === 2500 || fullPriceCents === 1000) return fullPriceCents;
   return null;
 }
 function fmtUSD(cents: number) {
