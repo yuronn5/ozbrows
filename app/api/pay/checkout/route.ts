@@ -33,19 +33,14 @@ export async function POST(req: Request) {
     } | null;
 
     if (!body?.date || !body?.time || !body?.bookingId) {
-      return NextResponse.json(
-        { error: "missing fields" },
-        { status: 400, headers: noCache }
-      );
+      return NextResponse.json({ error: "missing fields" }, { status: 400, headers: noCache });
     }
 
-    const depositDefault =
-      Number(process.env.DEPOSIT_AMOUNT_CENTS ?? 2000) || 2000;
+    const depositDefault = Number(process.env.DEPOSIT_AMOUNT_CENTS ?? 2000) || 2000;
     const currency = (process.env.DEPOSIT_CURRENCY || "usd").toLowerCase();
 
     const fullPriceCents = parseUsdToCents(body.price);
-    const isSmallFull =
-      fullPriceCents === 2500 || fullPriceCents === 1500 ? true : false;
+    const isSmallFull = fullPriceCents === 2500 || fullPriceCents === 1500;
 
     const amount = isSmallFull ? (fullPriceCents as number) : depositDefault;
 
@@ -67,9 +62,7 @@ export async function POST(req: Request) {
       mode: "payment",
       client_reference_id: body.bookingId,
       metadata: meta,
-      payment_intent_data: {
-        metadata: meta,
-      },
+      payment_intent_data: { metadata: meta },
       line_items: [
         {
           price_data: {
@@ -83,7 +76,9 @@ export async function POST(req: Request) {
           quantity: 1,
         },
       ],
-      success_url: `${origin}/thank-you`,
+      // success -> thank-you з session id
+      success_url: `${origin}/thank-you?cs={CHECKOUT_SESSION_ID}`,
+      // cancel -> як було
       cancel_url: `${origin}/booking?cancelled=1`,
     });
 
