@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     const currency = (process.env.DEPOSIT_CURRENCY || "usd").toLowerCase();
 
     const fullPriceCents = parseUsdToCents(body.price);
-    const isSmallFull = fullPriceCents === 2500 || fullPriceCents === 1500;
+    const isSmallFull = fullPriceCents === 2500 || fullPriceCents === 1000;
 
     const amount = isSmallFull ? (fullPriceCents as number) : depositDefault;
 
