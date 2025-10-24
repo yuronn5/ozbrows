@@ -34,6 +34,10 @@ export default function RootLayout({
           }}
         />
         {/* End Google Tag Manager */}
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, viewport-fit=cover"
+        />
       </head>
       <body suppressHydrationWarning>
         {/* Google Tag Manager (noscript) */}
