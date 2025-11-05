@@ -51,6 +51,13 @@ export default function Page() {
       category: "Brows",
     },
     {
+      id: "brow-lightening",
+      title: "Brow lightening",
+      price: "$30",
+      duration: "20 min",
+      category: "Brows",
+    },
+    {
       id: "lip-wax",
       title: "Lip wax",
       price: "$10",
@@ -99,6 +106,13 @@ export default function Page() {
       title: "Evening makeup + lashes",
       price: "$120",
       duration: "1 h 15 min",
+      category: "Make up",
+    },
+    {
+      id: "makeup-wedding",
+      title: "Wedding makeup + lashes",
+      price: "$160",
+      duration: "1 h 20 min",
       category: "Make up",
     },
   ];
