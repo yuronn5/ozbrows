@@ -242,6 +242,7 @@ export default function PricesModal({
         .pm-dur {
           font-size: 12px;
           color: #666;
+          white-space: nowrap;
         }
         .pm-price {
           font-weight: 700;
