@@ -170,7 +170,18 @@ export default function BookingPage() {
     durationMin: number;
   }>(null);
 
-  const canPay = !!selected && nameIsValid(name) && phoneIsValid(phone) && !busy;
+
+  const nameRef = useRef<HTMLInputElement>(null);
+  const phoneRef = useRef<HTMLInputElement>(null);
+
+  function scrollFocus(el: HTMLElement | null) {
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    (el as HTMLInputElement).focus?.({ preventScroll: true });
+  }
+
+
+  const canClickPay = !!selected && !busy;
 
   const [flash, setFlash] = useState<null | {
     kind: "success" | "info" | "error";
@@ -195,7 +206,6 @@ export default function BookingPage() {
     } catch {}
   }, []);
 
-
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
     const sid = sp.get("service");
@@ -218,7 +228,7 @@ export default function BookingPage() {
     setSlots(genSlots(SLOT_MINUTES, patch.durationMin));
   }, []);
 
-  // слухач на "service:select" (з секції прайсів)
+
   useEffect(() => {
     const onPick = (e: Event) => {
       const det = (e as CustomEvent).detail as
@@ -374,16 +384,21 @@ export default function BookingPage() {
   }
 
   async function handleConfirm() {
-    if (!dateStr || !selected) {
-      alert("Please select a time");
-      return;
-    }
+
+    setNameTouched(true);
+    setPhoneTouched(true);
+
+
     if (!nameIsValid(name)) {
-      alert("Please enter a valid name (letters only, at least 2).");
+      scrollFocus(nameRef.current);
       return;
     }
     if (!phoneIsValid(phone)) {
-      alert("Please enter a valid phone (7–15 digits).");
+      scrollFocus(phoneRef.current);
+      return;
+    }
+    if (!dateStr || !selected) {
+      alert("Please select a time");
       return;
     }
 
@@ -550,6 +565,7 @@ export default function BookingPage() {
                     <label>
                       Name
                       <input
+                        ref={nameRef}
                         value={name}
                         onChange={(e) => setName(sanitizeNameInput(e.target.value))}
                         onBlur={() => setNameTouched(true)}
@@ -568,6 +584,7 @@ export default function BookingPage() {
                     <label>
                       Phone
                       <input
+                        ref={phoneRef}
                         value={phone}
                         onChange={(e) => setPhone(sanitizePhoneInput(e.target.value))}
                         onBlur={() => setPhoneTouched(true)}
@@ -629,7 +646,7 @@ export default function BookingPage() {
                 <button className="btn" onClick={() => setDateStr(null)}>
                   Close
                 </button>
-                <button className="btn primary" onClick={handleConfirm} disabled={!canPay}>
+                <button className="btn primary" onClick={handleConfirm} disabled={!canClickPay}>
                   {buttonLabel}
                 </button>
               </div>
