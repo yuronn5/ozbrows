@@ -1,0 +1,92 @@
+.bf-static {
+  margin: 60px auto;
+  max-width: 1200px;
+  background: linear-gradient(135deg, #f5efe9, #e8dcd3);
+  padding: 50px 30px;
+  border-radius: 28px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+.bf-static-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+/* TEXT */
+.bf-static-text {
+  flex: 1 1 350px;
+}
+
+.bf-static-title {
+  font-size: 42px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #2c2c2c;
+}
+
+.bf-static-sub {
+  font-size: 20px;
+  color: #7a6a5c;
+  margin-bottom: 6px;
+}
+
+.bf-static-off {
+  font-size: 50px;
+  font-weight: 800;
+  color: #c56f5c;
+}
+
+/* PHOTO BOX */
+.bf-static-photo {
+  position: relative;
+  flex: 1 1 350px;
+  height: 420px;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+}
+
+/* IMG always fills the box */
+.bf-static-photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/*  MOBILE  */
+@media (max-width: 980px) {
+  section.bf-static {
+    margin-right: 16px;
+    margin-left: 16px;
+    padding: 30px 20px;
+  }
+
+  .bf-static-inner {
+    flex-direction: column;
+    text-align: center;
+    gap: 24px;
+  }
+
+  .bf-static-title {
+    font-size: 32px;
+  }
+
+  .bf-static-off {
+    font-size: 36px;
+  }
+
+  .bf-static-photo {
+    flex: none;
+    width: 100%;
+    height: 260px; 
+    border-radius: 20px;
+  }
+  .bf-static-text {
+    flex: 1 1 150px;
+  }
+}

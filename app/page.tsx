@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import PricesModal, { Service } from "./components/PricesModal";
 import TestimonialsSection from "./components/TestimonialsSection";
 import PromoPopup from "./components/PromoPopup";
+import BlackFridayPromo from "./components/BlackFridayPromo";
 
 export default function Page() {
   const [showPrices, setShowPrices] = useState(false);
@@ -257,6 +258,9 @@ export default function Page() {
           </ul>
         </div>
       </section>
+
+      {/* ===== Black friday  ===== */}
+      <BlackFridayPromo />
 
       {/* SERVICES */}
       <section id="services" className="container services">
