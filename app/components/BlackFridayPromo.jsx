@@ -8,7 +8,8 @@ export default function BlackFridayBlock() {
         <div className="bf-static-text">
           <h2 className="bf-static-title">Black Friday</h2>
            <p className="bf-static-sub">11/27–12/02</p>
-          <p className="bf-static-off">-30% on all services</p>
+                <p className="bf-static-off">30% off brows & lashes<br/>20% off makeup</p>
+
         </div>
 
         <div className="bf-static-photo">

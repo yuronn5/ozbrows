@@ -260,7 +260,7 @@ export default function Page() {
       </section>
 
       {/* ===== Black friday  ===== */}
-      {/* <BlackFridayPromo /> */}
+      <BlackFridayPromo />
 
       {/* SERVICES */}
       <section id="services" className="container services">
