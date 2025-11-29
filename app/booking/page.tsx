@@ -111,6 +111,12 @@ function getChargeCentsLocal(fullPriceCents?: number | null) {
 function fmtUSD(cents: number) {
   return `$${(cents / 100).toFixed(0)}`;
 }
+function to12h(t: string) {
+  const [hh, mm] = t.split(":").map(Number);
+  const suffix = hh >= 12 ? "PM" : "AM";
+  const h12 = hh % 12 === 0 ? 12 : hh % 12;
+  return `${h12}:${String(mm).padStart(2, "0")} ${suffix}`;
+}
 
 /* ---------- data helpers ---------- */
 async function loadDay(dateStr: string): Promise<DayData> {
@@ -551,7 +557,7 @@ export default function BookingPage() {
                   <h3 className="sheet__title">Choose a time</h3>
                   <div className="sheet__sub">
                     {prettyDate}
-                    <span className="dot">•</span> Working hours: <b>08:00–20:00</b>
+                    <span className="dot">•</span> Working hours: <b>08:00am–8:00pm</b>
                     <span className="dot">•</span> <b>{durationNow}m</b>
                   </div>
                 </div>
@@ -608,13 +614,11 @@ export default function BookingPage() {
                     return (
                       <button
                         key={t}
-                        role="option"
-                        aria-selected={selectedNow}
                         className={`slot${selectedNow ? " selected" : ""}${disabled ? " disabled" : ""}`}
                         onClick={() => !disabled && setSelected(t)}
                         disabled={disabled}
                       >
-                        {t}
+                        {to12h(t)}
                       </button>
                     );
                   })}
@@ -630,7 +634,7 @@ export default function BookingPage() {
                         .map((b) => (
                           <div className="row" key={`${b.time}-${b.name}`}>
                             <span>
-                              {b.time}
+                              {to12h(b.time)}
                               {b.durationMin ? ` (${b.durationMin}m)` : ""}
                             </span>
                             <span>{b.name}</span>

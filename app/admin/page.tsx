@@ -55,6 +55,12 @@ function minToTime(m: number) {
 function addMinutes(t: string, delta: number) {
   return minToTime(parseTimeToMin(t) + delta);
 }
+function to12h(t: string) {
+  const [hh, mm] = t.split(":").map(Number);
+  const suffix = hh >= 12 ? "PM" : "AM";
+  const h12 = hh % 12 === 0 ? 12 : hh % 12;
+  return `${h12}:${String(mm).padStart(2, "0")} ${suffix}`;
+}
 
 /* ---------- thin fetch helper (без any) ---------- */
 function isErrorResponse(x: unknown): x is { error: string } {
@@ -405,7 +411,7 @@ export default function AdminPage() {
                     key={`${r.date}-${r.time}-${r.name}-${r.phone}-${r.isBlock ? "blk" : "bk"}`}
                   >
                     <td>{r.date}</td>
-                    <td>{r.time}</td>
+                    <td>{to12h(r.time)}</td>
                     <td>
                       {r.serviceTitle ? (
                         <>
