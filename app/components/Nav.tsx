@@ -114,6 +114,13 @@ export default function Nav() {
       duration: "1 h 20 min",
       category: "Make up",
     },
+    {
+      id: "makeup-ceremony",
+      title: "Makeup for wedding ceremony + lashes",
+      price: "$150",
+      duration: "1 h 15 min",
+      category: "Make up",
+    },
   ];
 
   const openPrices = () => {
