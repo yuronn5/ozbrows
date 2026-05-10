@@ -403,7 +403,7 @@ export default function Page() {
               <h2>Contacts</h2>
 
               {/* Address */}
-              <div className="contact-row">
+              {/* <div className="contact-row">
                 <div className="contact-text">
                   <div className="contact-label">Address</div>
                   <div className="contact-value">
@@ -420,7 +420,7 @@ export default function Page() {
                 >
                   <MapPin />
                 </a>
-              </div>
+              </div> */}
 
               {/* Phone */}
               <div className="contact-row">
