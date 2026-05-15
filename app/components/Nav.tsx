@@ -15,14 +15,14 @@ export default function Nav() {
     {
       id: "brow-lam-tint-tweeze",
       title: "Brow lamination + tint + tweeze",
-      price: "$100",
+      price: "$110",
       duration: "1 h",
       category: "Brows",
     },
     {
       id: "brow-lam-tweeze",
       title: "Brow lamination + tweeze",
-      price: "$85",
+      price: "$100",
       duration: "30 min",
       category: "Brows",
     },
@@ -36,14 +36,14 @@ export default function Nav() {
     {
       id: "wax-brows",
       title: "Wax brows",
-      price: "$25",
+      price: "$40",
       duration: "15 min",
       category: "Brows",
     },
     {
       id: "wax-tint",
       title: "Wax + tint",
-      price: "$50",
+      price: "$60",
       duration: "40 min",
       category: "Brows",
     },
@@ -57,7 +57,7 @@ export default function Nav() {
     {
       id: "lip-wax",
       title: "Lip wax",
-      price: "$10",
+      price: "$20",
       duration: "15 min",
       category: "Brows",
     },
@@ -66,7 +66,7 @@ export default function Nav() {
     {
       id: "lash-lift",
       title: "Lash lift (tint included)",
-      price: "$100",
+      price: "$120",
       duration: "1 h 30 min",
       category: "Lashes",
     },
@@ -80,7 +80,7 @@ export default function Nav() {
     {
       id: "brow-lam-lash-lift",
       title: "Brow lamination + Lash lift",
-      price: "$190",
+      price: "$200",
       duration: "2 h",
       category: "Lashes",
     },
@@ -103,7 +103,7 @@ export default function Nav() {
     {
       id: "makeup-evening",
       title: "Evening makeup + lashes",
-      price: "$140",
+      price: "$150",
       duration: "1 h 15 min",
       category: "Make up",
     },
@@ -165,7 +165,6 @@ export default function Nav() {
 
         <div className="menu" role="menu">
           <a href="#services">Services</a>
-          <a href="#pricing">Pricing</a>
           <a href="#gallery">Gallery</a>
           <a href="#reviews">Testimonials</a>
           <a href="#faq">FAQ</a>
