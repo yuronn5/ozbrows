@@ -209,7 +209,7 @@ export default function Page() {
   return (
     <>
       <Nav />
-      <PromoPopup />
+      {/* <PromoPopup /> */}
       {/* ===== HERO full-bleed ===== */}
       <section id="home" className={`hero hero--fullbleed ${heroReady ? "is-ready" : ""}`}>
         <div className="hero__bg" aria-hidden>
