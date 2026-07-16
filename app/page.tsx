@@ -76,7 +76,7 @@ export default function Page() {
     {
       id: "lash-tint",
       title: "Lash tint",
-      price: "$35",
+      price: "$40",
       duration: "15 min",
       category: "Lashes",
     },
@@ -90,15 +90,8 @@ export default function Page() {
     // Make up
     {
       id: "makeup-nude",
-      title: "Nude makeup + lashes",
-      price: "$110",
-      duration: "1 h",
-      category: "Make up",
-    },
-    {
-      id: "makeup-day",
-      title: "Day makeup + lashes",
-      price: "$120",
+      title: "Nude/Day makeup + lashes",
+      price: "$130",
       duration: "1 h",
       category: "Make up",
     },
