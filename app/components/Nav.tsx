@@ -63,13 +63,13 @@ export default function Nav() {
     },
 
     // Lashes
-    {
-      id: "lash-lift",
-      title: "Lash lift (tint included)",
-      price: "$120",
-      duration: "1 h 30 min",
-      category: "Lashes",
-    },
+    // {
+    //   id: "lash-lift",
+    //   title: "Lash lift (tint included)",
+    //   price: "$120",
+    //   duration: "1 h 30 min",
+    //   category: "Lashes",
+    // },
     {
       id: "lash-tint",
       title: "Lash tint",
@@ -77,13 +77,13 @@ export default function Nav() {
       duration: "15 min",
       category: "Lashes",
     },
-    {
-      id: "brow-lam-lash-lift",
-      title: "Brow lamination + Lash lift",
-      price: "$200",
-      duration: "2 h",
-      category: "Lashes",
-    },
+    // {
+    //   id: "brow-lam-lash-lift",
+    //   title: "Brow lamination + Lash lift",
+    //   price: "$200",
+    //   duration: "2 h",
+    //   category: "Lashes",
+    // },
 
     // Make up
     {
