@@ -3,128 +3,12 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Nav from "./components/Nav";
 import Gallery from "./components/Gallery";
-import { MapPin, Phone, Instagram } from "lucide-react";
-import { useRouter } from "next/navigation";
-import PricesModal, { Service } from "./components/PricesModal";
+import { Phone, Instagram } from "lucide-react";
 import TestimonialsSection from "./components/TestimonialsSection";
-import PromoPopup from "./components/PromoPopup";
-import BlackFridayPromo from "./components/BlackFridayPromo";
+import BookingContactModal from "./components/BookingContactModal";
 
 export default function Page() {
-  const [showPrices, setShowPrices] = useState(false);
-  const router = useRouter();
-
-  const services: Service[] = [
-    // Brows
-    {
-      id: "brow-lam-tint-tweeze",
-      title: "Brow lamination + tint + tweeze",
-      price: "$110",
-      duration: "1 h",
-      category: "Brows",
-    },
-    {
-      id: "brow-lam-tweeze",
-      title: "Brow lamination + tweeze",
-      price: "$100",
-      duration: "30 min",
-      category: "Brows",
-    },
-    {
-      id: "brow-tint",
-      title: "Brow tint",
-      price: "$40",
-      duration: "25 min",
-      category: "Brows",
-    },
-    {
-      id: "wax-brows",
-      title: "Wax brows",
-      price: "$40",
-      duration: "15 min",
-      category: "Brows",
-    },
-    {
-      id: "wax-tint",
-      title: "Wax + tint",
-      price: "$60",
-      duration: "40 min",
-      category: "Brows",
-    },
-    {
-      id: "brow-lightening",
-      title: "Brow lightening",
-      price: "$30",
-      duration: "20 min",
-      category: "Brows",
-    },
-    {
-      id: "lip-wax",
-      title: "Lip wax",
-      price: "$20",
-      duration: "15 min",
-      category: "Brows",
-    },
-    // Lashes
-    // {
-    //   id: "lash-lift",
-    //   title: "Lash lift (tint included)",
-    //   price: "$120",
-    //   duration: "1 h 30 min",
-    //   category: "Lashes",
-    // },
-    {
-      id: "lash-tint",
-      title: "Lash tint",
-      price: "$40",
-      duration: "15 min",
-      category: "Lashes",
-    },
-    // {
-    //   id: "brow-lam-lash-lift",
-    //   title: "Brow lamination + Lash lift",
-    //   price: "$200",
-    //   duration: "2 h",
-    //   category: "Lashes",
-    // },
-    // Make up
-    {
-      id: "makeup-nude",
-      title: "Nude/Day makeup + lashes",
-      price: "$130",
-      duration: "1 h",
-      category: "Make up",
-    },
-    {
-      id: "makeup-evening",
-      title: "Evening makeup + lashes",
-      price: "$150",
-      duration: "1 h 15 min",
-      category: "Make up",
-    },
-    {
-      id: "makeup-wedding",
-      title: "Wedding makeup + lashes",
-      price: "$170",
-      duration: "1 h 20 min",
-      category: "Make up",
-    },
-     {
-      id: "makeup-ceremony",
-      title: "Makeup for wedding ceremony + lashes",
-      price: "$150",
-      duration: "1 h 15 min",
-      category: "Make up",
-    },
-  ];
-
-  const openPricesModal = () => setShowPrices(true);
-  const closePricesModal = () => setShowPrices(false);
-
-  const handleSelectService = (s: Service) => {
-    closePricesModal();
-    router.push(`/booking?service=${encodeURIComponent(s.id)}`);
-  };
+  const [showBookingContacts, setShowBookingContacts] = useState(false);
 
   useEffect(() => {
     // smooth scroll
@@ -232,7 +116,7 @@ export default function Page() {
               href="#"
               onClick={(e) => {
                 e.preventDefault();
-                openPricesModal();
+                setShowBookingContacts(true);
               }}
             >
               Book Now
@@ -454,7 +338,7 @@ export default function Page() {
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  openPricesModal();
+                  setShowBookingContacts(true);
                 }}
               >
                 Book Now
@@ -464,12 +348,9 @@ export default function Page() {
         </div>
       </section>
 
-      {/* One shared PricesModal */}
-      <PricesModal
-        open={showPrices}
-        onClose={closePricesModal}
-        onSelect={handleSelectService}
-        services={services}
+      <BookingContactModal
+        open={showBookingContacts}
+        onClose={() => setShowBookingContacts(false)}
       />
 
       <footer

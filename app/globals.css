@@ -707,6 +707,83 @@ section.contact {
   }
 }
 /* Contacts */
+.booking-contact-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(30, 20, 24, 0.48);
+  backdrop-filter: blur(7px);
+}
+.booking-contact-modal {
+  position: relative;
+  width: min(480px, 100%);
+  padding: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 26px;
+  background: rgba(255, 252, 253, 0.97);
+  box-shadow: 0 28px 80px rgba(74, 32, 48, 0.28);
+}
+.booking-contact-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--muted);
+  cursor: pointer;
+}
+.booking-contact-close svg { width: 20px; }
+.booking-contact-heading { padding-right: 28px; }
+.booking-contact-kicker {
+  color: #c0265d;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.booking-contact-heading h2 { margin: 7px 0 8px; }
+.booking-contact-heading p { margin: 0; color: var(--muted); line-height: 1.55; }
+.booking-contact-list { display: grid; gap: 10px; margin-top: 22px; }
+.booking-contact-row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px;
+  border: 1px solid var(--border, #ececec);
+  border-radius: 17px;
+  background: rgba(255, 255, 255, 0.75);
+  color: var(--text);
+  text-decoration: none;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.booking-contact-row:hover { transform: translateY(-1px); box-shadow: 0 12px 28px rgba(192, 38, 93, .12); }
+.booking-contact-row > span:last-child { display: grid; gap: 3px; }
+.booking-contact-row small { color: var(--muted); }
+.booking-contact-icon {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border, #ececec);
+  border-radius: 999px;
+  background: #fff;
+  color: #c0265d;
+}
+.booking-contact-icon svg { width: 21px; }
+.booking-contact-icon--primary { color: #fff; border-color: transparent; background: linear-gradient(180deg, #ff8ab2, #ff5c96); }
+@media (max-width: 540px) {
+  .booking-contact-modal { padding: 26px 18px 20px; }
+}
+
 #contact .contact-row {
   display: flex;
   align-items: center;
