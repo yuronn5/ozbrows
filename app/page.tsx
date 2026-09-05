@@ -6,9 +6,17 @@ import Gallery from "./components/Gallery";
 import { Phone, Instagram } from "lucide-react";
 import TestimonialsSection from "./components/TestimonialsSection";
 import BookingContactModal from "./components/BookingContactModal";
+import PricesModal from "./components/PricesModal";
+import { services } from "./components/services";
 
 export default function Page() {
   const [showBookingContacts, setShowBookingContacts] = useState(false);
+  const [showPrices, setShowPrices] = useState(false);
+
+  const selectService = () => {
+    setShowPrices(false);
+    setShowBookingContacts(true);
+  };
 
   useEffect(() => {
     // smooth scroll
@@ -116,7 +124,7 @@ export default function Page() {
               href="#"
               onClick={(e) => {
                 e.preventDefault();
-                setShowBookingContacts(true);
+                setShowPrices(true);
               }}
             >
               Book Now
@@ -338,7 +346,7 @@ export default function Page() {
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  setShowBookingContacts(true);
+                  setShowPrices(true);
                 }}
               >
                 Book Now
@@ -347,6 +355,13 @@ export default function Page() {
           </div>
         </div>
       </section>
+
+      <PricesModal
+        open={showPrices}
+        onClose={() => setShowPrices(false)}
+        onSelect={selectService}
+        services={services}
+      />
 
       <BookingContactModal
         open={showBookingContacts}

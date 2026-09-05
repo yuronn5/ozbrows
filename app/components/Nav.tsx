@@ -2,13 +2,21 @@
 
 import { useEffect, useState } from "react";
 import BookingContactModal from "./BookingContactModal";
+import PricesModal from "./PricesModal";
+import { services } from "./services";
 
 export default function Nav() {
   const [open, setOpen] = useState(false);
   const [showBookingContacts, setShowBookingContacts] = useState(false);
+  const [showPrices, setShowPrices] = useState(false);
 
-  const openBookingContacts = () => {
+  const openPrices = () => {
     setOpen(false);
+    setShowPrices(true);
+  };
+
+  const selectService = () => {
+    setShowPrices(false);
     setShowBookingContacts(true);
   };
 
@@ -55,7 +63,7 @@ export default function Nav() {
           className="btn"
           onClick={(e) => {
             e.preventDefault();
-            openBookingContacts();
+            openPrices();
           }}
         >
           Book Now
@@ -123,7 +131,7 @@ export default function Nav() {
             className="btn mobile-cta"
             onClick={(e) => {
               e.preventDefault();
-              openBookingContacts();
+              openPrices();
             }}
           >
             Book Now
@@ -135,6 +143,14 @@ export default function Nav() {
       <div
         className={`backdrop ${open ? "show" : ""}`}
         onClick={() => setOpen(false)}
+      />
+
+      <PricesModal
+        open={showPrices}
+        onClose={() => setShowPrices(false)}
+        onSelect={selectService}
+        services={services}
+        headline="Prices & Services"
       />
 
       <BookingContactModal
